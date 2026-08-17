@@ -1,0 +1,374 @@
+/* 弾き語りコード譜アプリの共通スタイル */
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --text: #172033;
+  --muted: #667085;
+  --border: #d9deea;
+  --accent: #2563eb;
+  --accent-light: #e8f0ff;
+  --danger: #dc2626;
+  --shadow: 0 8px 24px rgba(20, 35, 70, .08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  min-height: 42px;
+  padding: .55rem .85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+button:hover {
+  border-color: #aeb8ca;
+  background: #f8fafc;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .24);
+  outline-offset: 2px;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: max(14px, env(safe-area-inset-top)) clamp(14px, 3vw, 32px) 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 2px 12px rgba(20, 35, 70, .05);
+  backdrop-filter: blur(12px);
+}
+
+h1 {
+  margin: 0 0 12px;
+  font-size: clamp(1.15rem, 2.6vw, 1.55rem);
+}
+
+.song-meta {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) minmax(180px, 2fr) 100px 90px;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.song-meta label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 600;
+}
+
+input,
+textarea {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.song-meta input {
+  width: 100%;
+  min-height: 40px;
+  padding: .55rem .65rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.toolbar .mode.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+  font-weight: 700;
+}
+
+.spacer {
+  flex: 1;
+}
+
+#status {
+  min-height: 1.2em;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+main {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 32px);
+}
+
+.panel {
+  min-width: 0;
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.section-label {
+  display: block;
+  margin-bottom: 9px;
+  font-weight: 700;
+}
+
+#lyricsInput {
+  display: block;
+  width: 100%;
+  min-height: min(62vh, 620px);
+  resize: vertical;
+  padding: 14px;
+  font-size: 1rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.hint {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.6;
+}
+
+.score,
+.sheet {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.score-line,
+.preview-line {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 5.4em;
+  padding-top: 2.8em;
+  white-space: pre;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0;
+  line-height: 1.8;
+  font-kerning: none;
+}
+
+.lyric-text {
+  display: block;
+  min-height: 1.8em;
+  white-space: pre;
+}
+
+.lyric-char {
+  display: inline-block;
+  white-space: pre;
+}
+
+.score-line > .chord,
+.preview-line > .chord {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.chord {
+  min-width: 44px;
+  min-height: 38px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #0f3d9e;
+  background: transparent;
+  font-weight: 700;
+  text-align: center;
+  user-select: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.chord:hover,
+.chord.selected {
+  border-color: #9bb8f5;
+  background: var(--accent-light);
+}
+
+.chord:active {
+  cursor: grabbing;
+}
+
+.inline-chord-input {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  width: 72px;
+  min-height: 38px;
+  padding: 6px 8px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: #fff;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.mobile-controls {
+  position: sticky;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 8;
+  display: grid;
+  grid-template-columns: auto 48px minmax(72px, 1fr) 48px;
+  gap: 7px;
+  margin-top: 14px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: var(--shadow);
+}
+
+.mobile-controls input {
+  width: 100%;
+  min-height: 42px;
+  padding: 6px;
+  text-align: center;
+}
+
+#deleteChordBtn {
+  color: var(--danger);
+}
+
+.sheet {
+  overflow: visible;
+}
+
+.sheet h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+}
+
+.sheet .artist {
+  margin: 4px 0 24px;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    position: relative;
+  }
+
+  .song-meta {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .song-meta label:nth-child(-n+2) {
+    grid-column: span 2;
+  }
+
+  .toolbar button {
+    flex: 1 1 auto;
+  }
+
+  .spacer {
+    display: none;
+  }
+
+  main {
+    padding: 12px;
+  }
+
+  .panel {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .score-line,
+  .preview-line {
+    min-height: 5.4em;
+  }
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .app-header,
+  #lyricsEditor,
+  #chordsEditor,
+  .mobile-controls,
+  .toolbar,
+  #status,
+  .hint,
+  button,
+  input,
+  textarea {
+    display: none !important;
+  }
+
+  main,
+  #preview,
+  .panel,
+  .sheet {
+    display: block !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .score-line,
+  .preview-line {
+    break-inside: avoid;
+  }
+
+  .chord {
+    border-color: transparent !important;
+    background: transparent !important;
+  }
+}

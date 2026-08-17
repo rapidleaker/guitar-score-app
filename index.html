@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>弾き語りコード譜</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>弾き語りコード譜</h1>
+    <div class="song-meta">
+      <label>曲名<input id="titleInput" type="text" placeholder="曲名"></label>
+      <label>アーティスト<input id="artistInput" type="text" placeholder="アーティスト名"></label>
+      <label>Key<input id="keyInput" type="text" placeholder="例: C"></label>
+      <label>Capo<input id="capoInput" type="number" min="0" max="12" value="0"></label>
+    </div>
+    <div class="toolbar">
+      <button id="lyricsMode" class="mode active">歌詞編集</button>
+      <button id="chordsMode" class="mode">コード編集</button>
+      <button id="previewMode" class="mode">プレビュー</button>
+      <span class="spacer"></span>
+      <button id="undoBtn" title="戻す">↶ 戻す</button>
+      <button id="redoBtn" title="やり直す">↷ やり直す</button>
+      <button id="printBtn">印刷</button>
+    </div>
+    <div id="status" aria-live="polite"></div>
+  </header>
+
+  <main>
+    <section id="lyricsEditor" class="panel">
+      <label for="lyricsInput" class="section-label">歌詞（改行・空行を保持します）</label>
+      <textarea id="lyricsInput" spellcheck="false" placeholder="歌詞を入力または貼り付けてください"></textarea>
+    </section>
+    <section id="chordsEditor" class="panel hidden">
+      <p class="hint">歌詞をタップ／クリックすると、その文字位置にコードを追加できます。コードを選択してドラッグ、矢印キー、操作ボタンで調整できます。</p>
+      <div id="scoreEditor" class="score"></div>
+      <div id="mobileControls" class="mobile-controls hidden">
+        <button id="deleteChordBtn">削除</button>
+        <button id="nudgeLeftBtn">←</button>
+        <input id="selectedChordName" aria-label="選択中のコード名">
+        <button id="nudgeRightBtn">→</button>
+      </div>
+    </section>
+    <section id="preview" class="panel hidden">
+      <article id="previewSheet" class="sheet"></article>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
