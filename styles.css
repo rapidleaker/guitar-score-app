@@ -351,24 +351,40 @@ main {
 
   main,
   #preview,
+  #previewSheet,
   .panel,
-  .sheet {
+  .sheet,
+  .score {
     display: block !important;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    box-shadow: none;
-    overflow: visible;
+    visibility: visible !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
   }
 
-  .score-line,
   .preview-line {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    min-height: 5.4em !important;
+    padding-top: 2.8em !important;
+    white-space: pre !important;
     break-inside: avoid;
   }
 
-  .chord {
-    border-color: transparent !important;
-    background: transparent !important;
+  .preview-line > .chord {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    top: 0 !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .lyric-text,
+  .lyric-char {
+    visibility: visible !important;
   }
 }
