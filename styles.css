@@ -1,7 +1,6 @@
-/* 弾き語りコード譜アプリの共通スタイル */
 :root {
   --bg: #f5f7fb;
-  --surface: #ffffff;
+  --surface: #fff;
   --text: #172033;
   --muted: #667085;
   --border: #d9deea;
@@ -9,18 +8,17 @@
   --accent-light: #e8f0ff;
   --danger: #dc2626;
   --shadow: 0 8px 24px rgba(20, 35, 70, .08);
+  --lyric-font-size: 16px;
+  --chord-font-size: 16px;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html {
-  min-height: 100%;
-  background: var(--bg);
-}
-
+html,
 body {
+  min-height: 100%;
   margin: 0;
   color: var(--text);
   background: var(--bg);
@@ -58,30 +56,132 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px clamp(16px, 4vw, 48px);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.home-header h1,
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.6vw, 1.55rem);
+}
+
+.primary-button {
+  color: #fff;
+  border-color: var(--accent);
+  background: var(--accent);
+  font-weight: 700;
+}
+
+.home-main {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 42px);
+}
+
+.home-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.home-title-row h2 {
+  margin: 0;
+}
+
+#songCount {
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.song-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.song-card {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.song-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.song-card p {
+  margin: 4px 0;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.song-card-actions {
+  display: flex;
+  gap: 7px;
+  margin-top: 16px;
+}
+
+.song-card-actions button:first-child {
+  flex: 1;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.song-card-actions .delete-song {
+  color: var(--danger);
+}
+
+.empty-message {
+  color: var(--muted);
+}
+
 .app-header {
   position: sticky;
   top: 0;
   z-index: 20;
-  padding: max(14px, env(safe-area-inset-top)) clamp(14px, 3vw, 32px) 14px;
+  padding: max(14px, env(safe-area-inset-top))
+    clamp(14px, 3vw, 32px) 14px;
   border-bottom: 1px solid var(--border);
   background: rgba(255, 255, 255, .94);
   box-shadow: 0 2px 12px rgba(20, 35, 70, .05);
   backdrop-filter: blur(12px);
 }
 
-h1 {
-  margin: 0 0 12px;
-  font-size: clamp(1.15rem, 2.6vw, 1.55rem);
+.editor-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
 }
 
 .song-meta {
   display: grid;
-  grid-template-columns: minmax(180px, 2fr) minmax(180px, 2fr) 100px 90px;
+  grid-template-columns:
+    minmax(180px, 2fr)
+    minmax(180px, 2fr)
+    100px
+    90px;
   gap: 9px;
   margin-bottom: 12px;
 }
 
-.song-meta label {
+.song-meta label,
+.font-size-settings label {
   display: grid;
   gap: 4px;
   color: var(--muted);
@@ -101,6 +201,36 @@ textarea {
   width: 100%;
   min-height: 40px;
   padding: .55rem .65rem;
+}
+
+.font-size-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.font-size-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.font-size-settings input[type="range"] {
+  width: 150px;
+  accent-color: var(--accent);
+}
+
+.font-size-settings output {
+  min-width: 42px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.font-size-settings button {
+  min-height: 36px;
+  padding: .4rem .65rem;
 }
 
 .toolbar {
@@ -143,10 +273,6 @@ main {
   box-shadow: var(--shadow);
 }
 
-.hidden {
-  display: none !important;
-}
-
 .section-label {
   display: block;
   margin-bottom: 9px;
@@ -181,12 +307,10 @@ main {
 .score-line,
 .preview-line {
   position: relative;
-  box-sizing: border-box;
   min-height: 5.4em;
   padding-top: 2.8em;
   white-space: pre;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 1rem;
+  font-size: var(--lyric-font-size);
   letter-spacing: 0;
   line-height: 1.8;
   font-kerning: none;
@@ -220,6 +344,7 @@ main {
   border-radius: 9px;
   color: #0f3d9e;
   background: transparent;
+  font-size: var(--chord-font-size);
   font-weight: 700;
   text-align: center;
   user-select: none;
@@ -292,6 +417,11 @@ main {
 }
 
 @media (max-width: 640px) {
+  .home-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .app-header {
     position: relative;
   }
@@ -302,6 +432,15 @@ main {
 
   .song-meta label:nth-child(-n+2) {
     grid-column: span 2;
+  }
+
+  .font-size-settings {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .font-size-settings input[type="range"] {
+    width: 100%;
   }
 
   .toolbar button {
@@ -320,11 +459,6 @@ main {
     padding: 14px;
     border-radius: 12px;
   }
-
-  .score-line,
-  .preview-line {
-    min-height: 5.4em;
-  }
 }
 
 @media print {
@@ -336,9 +470,11 @@ main {
     background: #fff;
   }
 
+  .home-screen,
   .app-header,
   #lyricsEditor,
   #chordsEditor,
+  .font-size-settings,
   .mobile-controls,
   .toolbar,
   #status,
