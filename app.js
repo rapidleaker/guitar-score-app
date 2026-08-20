@@ -3,19 +3,36 @@
 
   const STORAGE_KEY = 'guitar-score-app-v1';
   const MAX_HISTORY = 100;
+  const DEFAULT_LYRIC_FONT_SIZE = 16;
+  const DEFAULT_CHORD_FONT_SIZE = 16;
+  const MIN_FONT_SIZE = 12;
+  const MAX_FONT_SIZE = 32;
+
   const $ = selector => document.querySelector(selector);
 
   const els = {
+    home: $('#homeScreen'),
+    editor: $('#editorScreen'),
+    songList: $('#songList'),
+    songCount: $('#songCount'),
+    emptyMessage: $('#emptyMessage'),
+    newSong: $('#newSongBtn'),
+    homeBtn: $('#homeBtn'),
     title: $('#titleInput'),
     artist: $('#artistInput'),
     key: $('#keyInput'),
     capo: $('#capoInput'),
+    lyricFontSize: $('#lyricFontSizeInput'),
+    chordFontSize: $('#chordFontSizeInput'),
+    lyricFontSizeValue: $('#lyricFontSizeValue'),
+    chordFontSizeValue: $('#chordFontSizeValue'),
+    resetFontSize: $('#resetFontSizeBtn'),
     lyrics: $('#lyricsInput'),
     score: $('#scoreEditor'),
-    preview: $('#preview'),
     previewSheet: $('#previewSheet'),
     lyricsEditor: $('#lyricsEditor'),
     chordsEditor: $('#chordsEditor'),
+    preview: $('#preview'),
     mobileControls: $('#mobileControls'),
     selectedChordName: $('#selectedChordName'),
     status: $('#status'),
@@ -29,7 +46,8 @@
     }
   };
 
-  let song = loadSong();
+  let store = loadStore();
+  let song = null;
   let mode = 'lyrics';
   let selectedChordId = null;
   let inlineInput = null;
@@ -40,11 +58,76 @@
   let lyricsTimer = null;
 
   function uid(prefix) {
-    return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    return `${prefix}-${Date.now().toString(36)}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
   }
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function clampFontSize(value, fallback) {
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) {
+      return fallback;
+    }
+
+    return Math.min(
+      MAX_FONT_SIZE,
+      Math.max(MIN_FONT_SIZE, numericValue)
+    );
+  }
+
+  function normalizeFontSizes(target) {
+    target.lyricFontSize = clampFontSize(
+      target.lyricFontSize,
+      DEFAULT_LYRIC_FONT_SIZE
+    );
+
+    target.chordFontSize = clampFontSize(
+      target.chordFontSize,
+      DEFAULT_CHORD_FONT_SIZE
+    );
+
+    return target;
+  }
+
+  function normalizeSong(target) {
+    if (!target || typeof target !== 'object') {
+      return null;
+    }
+
+    target.id = target.id || uid('song');
+    target.title = String(target.title || '');
+    target.artist = String(target.artist || '');
+    target.lyrics = String(target.lyrics || '');
+    target.key = String(target.key || '');
+    target.capo = Math.max(0, Number(target.capo) || 0);
+    target.updatedAt = Number(target.updatedAt) || Date.now();
+
+    target.chords = Array.isArray(target.chords)
+      ? target.chords
+      : [];
+
+    target.sections = Array.isArray(target.sections)
+      ? target.sections
+      : [];
+
+    target.lines = Array.isArray(target.lines) &&
+      target.lines.length
+      ? target.lines
+      : [
+          {
+            id: uid('line'),
+            text: ''
+          }
+        ];
+
+    normalizeFontSizes(target);
+
+    return target;
   }
 
   function createSong() {
@@ -62,51 +145,98 @@
       chords: [],
       sections: [],
       key: '',
-      capo: 0
+      capo: 0,
+      lyricFontSize: DEFAULT_LYRIC_FONT_SIZE,
+      chordFontSize: DEFAULT_CHORD_FONT_SIZE,
+      updatedAt: Date.now()
     };
   }
 
-  function loadSong() {
+  function loadStore() {
     try {
-      const saved = JSON.parse(
-        localStorage.getItem(STORAGE_KEY)
-      );
+      const raw = localStorage.getItem(STORAGE_KEY);
 
-      if (saved && typeof saved === 'object') {
-        saved.chords = Array.isArray(saved.chords)
-          ? saved.chords
-          : [];
+      if (!raw) {
+        return {
+          version: 2,
+          songs: [],
+          currentSongId: null
+        };
+      }
 
-        saved.sections = Array.isArray(saved.sections)
-          ? saved.sections
-          : [];
+      const saved = JSON.parse(raw);
 
-        saved.lines = Array.isArray(saved.lines) && saved.lines.length
-          ? saved.lines
-          : [
-              {
-                id: uid('line'),
-                text: ''
-              }
-            ];
+      if (saved && Array.isArray(saved.songs)) {
+        saved.songs = saved.songs
+          .map(normalizeSong)
+          .filter(Boolean);
+
+        saved.version = 2;
+        saved.currentSongId =
+          saved.currentSongId || null;
+
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(saved)
+        );
 
         return saved;
       }
+
+      if (saved && typeof saved === 'object') {
+        const migratedSong = normalizeSong(saved);
+
+        const migrated = {
+          version: 2,
+          songs: migratedSong ? [migratedSong] : [],
+          currentSongId: migratedSong
+            ? migratedSong.id
+            : null
+        };
+
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(migrated)
+        );
+
+        return migrated;
+      }
     } catch (error) {
-      console.warn('保存データの読み込みに失敗しました', error);
+      console.warn(
+        '保存データの読み込みに失敗しました',
+        error
+      );
     }
 
-    return createSong();
+    return {
+      version: 2,
+      songs: [],
+      currentSongId: null
+    };
+  }
+
+  function persistStore() {
+    store.currentSongId =
+      song?.id || store.currentSongId || null;
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(store)
+    );
+  }
+
+  function touchSong() {
+    if (song) {
+      song.updatedAt = Date.now();
+    }
   }
 
   function saveSong() {
     clearTimeout(saveTimer);
 
     saveTimer = setTimeout(() => {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(song)
-      );
+      touchSong();
+      persistStore();
 
       if (els.status) {
         els.status.textContent = '自動保存しました';
@@ -119,7 +249,14 @@
   }
 
   function commit(label = '変更') {
-    history = history.slice(0, historyIndex + 1);
+    if (!song) return;
+
+    touchSong();
+
+    history = history.slice(
+      0,
+      historyIndex + 1
+    );
 
     history.push({
       song: clone(song),
@@ -134,32 +271,70 @@
     saveSong();
   }
 
+  function resetHistory() {
+    history = [
+      {
+        song: clone(song),
+        label: '初期状態'
+      }
+    ];
+
+    historyIndex = 0;
+  }
+
+  function replaceCurrentSong() {
+    if (!song) return;
+
+    const index = store.songs.findIndex(
+      item => item.id === song.id
+    );
+
+    if (index >= 0) {
+      store.songs[index] = song;
+    }
+
+    saveSong();
+  }
+
   function undo() {
     if (historyIndex <= 0) return;
 
     historyIndex--;
-    song = clone(history[historyIndex].song);
+    song = clone(
+      history[historyIndex].song
+    );
+
+    replaceCurrentSong();
     selectedChordId = null;
     renderAll();
   }
 
   function redo() {
-    if (historyIndex >= history.length - 1) return;
+    if (historyIndex >= history.length - 1) {
+      return;
+    }
 
     historyIndex++;
-    song = clone(history[historyIndex].song);
+    song = clone(
+      history[historyIndex].song
+    );
+
+    replaceCurrentSong();
     selectedChordId = null;
     renderAll();
   }
 
   function normalizeLines(text) {
     const previousLines = song.lines || [];
-    const texts = String(text).split('\n');
 
-    return texts.map((lineText, index) => ({
-      id: previousLines[index]?.id || uid('line'),
-      text: lineText
-    }));
+    return String(text)
+      .split('\n')
+      .map((lineText, index) => ({
+        id:
+          previousLines[index]?.id ||
+          uid('line'),
+        text: lineText
+      }));
   }
 
   function syncLyrics(text, shouldCommit = true) {
@@ -172,8 +347,8 @@
       song.lines.map(line => line.id)
     );
 
-    song.chords = song.chords.filter(chord =>
-      validLineIds.has(chord.lineId)
+    song.chords = song.chords.filter(
+      chord => validLineIds.has(chord.lineId)
     );
 
     if (
@@ -187,10 +362,12 @@
   }
 
   function renderLyricWithChars(text) {
-    const fragment = document.createDocumentFragment();
+    const fragment =
+      document.createDocumentFragment();
 
     [...text].forEach((char, index) => {
-      const span = document.createElement('span');
+      const span =
+        document.createElement('span');
 
       span.className = 'lyric-char';
       span.dataset.index = index;
@@ -203,33 +380,32 @@
     return fragment;
   }
 
-  /*
-   * rowがDOMへ追加された後に呼び出す。
-   * rowの左端を基準に、文字の実測位置を返す。
-   */
   function getCharX(row, index) {
-    const chars = row.querySelectorAll('.lyric-char');
+    const chars =
+      row.querySelectorAll('.lyric-char');
 
     if (!chars.length) {
       return 0;
     }
 
-    const rowRect = row.getBoundingClientRect();
+    const rowRect =
+      row.getBoundingClientRect();
 
     if (index >= chars.length) {
-      const lastRect =
-        chars[chars.length - 1].getBoundingClientRect();
+      const rect =
+        chars[chars.length - 1]
+          .getBoundingClientRect();
 
-      return lastRect.right - rowRect.left;
+      return rect.right - rowRect.left;
     }
 
-    const charRect = chars[index].getBoundingClientRect();
-
-    return charRect.left - rowRect.left;
+    return chars[index]
+      .getBoundingClientRect()
+      .left - rowRect.left;
   }
 
   function getChordById(id) {
-    return song.chords.find(
+    return song?.chords.find(
       chord => chord.id === id
     );
   }
@@ -239,7 +415,8 @@
   }
 
   function renderLine(line, editable) {
-    const row = document.createElement('div');
+    const row =
+      document.createElement('div');
 
     row.className = editable
       ? 'score-line'
@@ -247,7 +424,9 @@
 
     row.dataset.lineId = line.id;
 
-    const lyricText = document.createElement('span');
+    const lyricText =
+      document.createElement('span');
+
     lyricText.className = 'lyric-text';
     lyricText.appendChild(
       renderLyricWithChars(line.text)
@@ -256,48 +435,62 @@
     row.appendChild(lyricText);
 
     if (editable) {
-      row.addEventListener('pointerup', event => {
-        if (dragState) return;
-        if (event.target.closest('.chord')) return;
+      row.addEventListener(
+        'pointerup',
+        event => {
+          if (
+            dragState ||
+            event.target.closest('.chord')
+          ) {
+            return;
+          }
 
-        const rowRect = row.getBoundingClientRect();
-        const x = event.clientX - rowRect.left;
-        const chars = [
-          ...row.querySelectorAll('.lyric-char')
-        ];
+          const rowRect =
+            row.getBoundingClientRect();
 
-        let charIndex = chars.findIndex(char => {
-          const rect = char.getBoundingClientRect();
-          const center =
-            rect.left -
-            rowRect.left +
-            rect.width / 2;
+          const x =
+            event.clientX - rowRect.left;
 
-          return x < center;
-        });
+          const chars = [
+            ...row.querySelectorAll(
+              '.lyric-char'
+            )
+          ];
 
-        if (charIndex < 0) {
-          charIndex = chars.length;
+          let charIndex = chars.findIndex(
+            char => {
+              const rect =
+                char.getBoundingClientRect();
+
+              const center =
+                rect.left -
+                rowRect.left +
+                rect.width / 2;
+
+              return x < center;
+            }
+          );
+
+          if (charIndex < 0) {
+            charIndex = chars.length;
+          }
+
+          selectedChordId = null;
+          updateMobileControls();
+
+          showInlineInput(
+            row,
+            line.id,
+            charIndex,
+            x
+          );
         }
-
-        selectedChordId = null;
-        updateMobileControls();
-
-        showInlineInput(
-          row,
-          line.id,
-          charIndex,
-          x
-        );
-      });
+      );
     }
 
     return row;
   }
 
-  /*
-   * rowを先にDOMへ追加した後に呼び出す。
-   */
   function renderChordsOnRow(row, lineId) {
     song.chords
       .filter(chord => chord.lineId === lineId)
@@ -314,21 +507,16 @@
           }`;
 
         chordElement.textContent = chord.name;
-        chordElement.dataset.chordId = chord.id;
+        chordElement.dataset.chordId =
+          chord.id;
 
         const baseX = getCharX(
           row,
           chord.charIndex
         );
 
-        const offset =
-          Number(chord.offset) || 0;
-
         chordElement.style.left =
-          `${baseX + offset}px`;
-
-        chordElement.style.transform =
-          'translateX(-50%)';
+          `${baseX + (Number(chord.offset) || 0)}px`;
 
         chordElement.addEventListener(
           'click',
@@ -358,10 +546,6 @@
     song.lines.forEach(line => {
       const row = renderLine(line, true);
 
-      /*
-       * 先にrowをDOMへ追加する。
-       * その後でgetCharX()を使ってコードを配置する。
-       */
       els.score.appendChild(row);
       renderChordsOnRow(row, line.id);
     });
@@ -370,10 +554,15 @@
   function renderPreview() {
     els.previewSheet.replaceChildren();
 
-    const title = document.createElement('h2');
-    title.textContent = song.title || '無題';
+    const title =
+      document.createElement('h2');
 
-    const artist = document.createElement('p');
+    title.textContent =
+      song.title || '無題';
+
+    const artist =
+      document.createElement('p');
+
     artist.className = 'artist';
     artist.textContent = [
       song.artist,
@@ -385,7 +574,9 @@
       .filter(Boolean)
       .join(' / ');
 
-    const score = document.createElement('div');
+    const score =
+      document.createElement('div');
+
     score.className = 'score';
 
     els.previewSheet.append(
@@ -397,15 +588,54 @@
     song.lines.forEach(line => {
       const row = renderLine(line, false);
 
-      /*
-       * プレビューでも同じ順番で配置する。
-       */
       score.appendChild(row);
       renderChordsOnRow(row, line.id);
     });
   }
 
+  function renderFontSizeSettings() {
+    if (!song) return;
+
+    const lyricSize =
+      clampFontSize(
+        song.lyricFontSize,
+        DEFAULT_LYRIC_FONT_SIZE
+      );
+
+    const chordSize =
+      clampFontSize(
+        song.chordFontSize,
+        DEFAULT_CHORD_FONT_SIZE
+      );
+
+    song.lyricFontSize = lyricSize;
+    song.chordFontSize = chordSize;
+
+    els.lyricFontSize.value = lyricSize;
+    els.chordFontSize.value = chordSize;
+
+    els.lyricFontSizeValue.textContent =
+      lyricSize;
+
+    els.chordFontSizeValue.textContent =
+      chordSize;
+
+    document.documentElement.style.setProperty(
+      '--lyric-font-size',
+      `${lyricSize}px`
+    );
+
+    document.documentElement.style.setProperty(
+      '--chord-font-size',
+      `${chordSize}px`
+    );
+  }
+
   function renderAll() {
+    if (!song) return;
+
+    normalizeFontSizes(song);
+
     els.title.value = song.title || '';
     els.artist.value = song.artist || '';
     els.key.value = song.key || '';
@@ -415,25 +645,11 @@
       els.lyrics.value = song.lyrics;
     }
 
+    renderFontSizeSettings();
     renderEditor();
     renderPreview();
     updateMode();
     updateMobileControls();
-  }
-
-  function switchMode(nextMode) {
-    closeInlineInput();
-
-    mode = nextMode;
-    updateMode();
-
-    if (mode === 'chords') {
-      requestAnimationFrame(renderEditor);
-    }
-
-    if (mode === 'preview') {
-      requestAnimationFrame(renderPreview);
-    }
   }
 
   function updateMode() {
@@ -462,6 +678,20 @@
     );
   }
 
+  function switchMode(nextMode) {
+    closeInlineInput();
+    mode = nextMode;
+    updateMode();
+
+    if (mode === 'chords') {
+      requestAnimationFrame(renderEditor);
+    }
+
+    if (mode === 'preview') {
+      requestAnimationFrame(renderPreview);
+    }
+  }
+
   function showInlineInput(
     row,
     lineId,
@@ -470,17 +700,16 @@
   ) {
     closeInlineInput();
 
-    inlineInput = document.createElement('input');
+    inlineInput =
+      document.createElement('input');
+
     inlineInput.className =
       'inline-chord-input';
 
     inlineInput.type = 'text';
     inlineInput.placeholder = 'コード';
     inlineInput.autocomplete = 'off';
-
     inlineInput.style.left = `${x}px`;
-    inlineInput.style.transform =
-      'translateX(-50%)';
 
     row.appendChild(inlineInput);
     inlineInput.focus();
@@ -505,10 +734,6 @@
           name,
           lineId,
           charIndex,
-
-          /*
-           * クリック位置をコード中心として保存する。
-           */
           offset: x - baseX
         });
 
@@ -538,9 +763,7 @@
 
     inlineInput.addEventListener(
       'blur',
-      () => {
-        setTimeout(finish, 80);
-      }
+      () => setTimeout(finish, 80)
     );
   }
 
@@ -598,10 +821,6 @@
     selectChord(chord.id);
   }
 
-  /*
-   * ドラッグ開始。
-   * コード中心とポインタの距離を保存する。
-   */
   function startDrag(event) {
     if (mode !== 'chords') return;
 
@@ -611,10 +830,10 @@
     const chordElement =
       event.currentTarget;
 
-    const chordId =
-      chordElement.dataset.chordId;
-
-    const chord = getChordById(chordId);
+    const chord =
+      getChordById(
+        chordElement.dataset.chordId
+      );
 
     if (!chord) return;
 
@@ -628,18 +847,11 @@
       id: chord.id,
       pointerId: event.pointerId,
       chordElement,
-
-      /*
-       * transform: translateX(-50%)後の
-       * 実際の中心位置を使う。
-       */
       grabDelta:
         event.clientX -
         (rect.left + rect.width / 2),
-
       originalOffset:
         Number(chord.offset || 0),
-
       moved: false
     };
 
@@ -667,11 +879,9 @@
   }
 
   function moveDrag(event) {
-    if (!dragState) return;
-
     if (
-      event.pointerId !==
-      dragState.pointerId
+      !dragState ||
+      event.pointerId !== dragState.pointerId
     ) {
       return;
     }
@@ -693,10 +903,6 @@
     const baseX =
       getCharX(row, chord.charIndex);
 
-    /*
-     * 現在のポインタ位置から、
-     * コード中心の位置を求める。
-     */
     const pointerCenterX =
       event.clientX -
       rowRect.left -
@@ -725,8 +931,7 @@
 
     if (
       event &&
-      event.pointerId !==
-      dragState.pointerId
+      event.pointerId !== dragState.pointerId
     ) {
       return;
     }
@@ -750,10 +955,6 @@
     }
 
     selectedChordId = finished.id;
-
-    /*
-     * 保存済みoffsetを基準に一度だけ再描画する。
-     */
     renderAll();
   }
 
@@ -765,16 +966,292 @@
       Math.max(0, Number(els.capo.value) || 0);
 
     commit('曲情報を編集');
+    renderHome();
   }
+
+  function updateFontSize(type, value) {
+    if (!song) return;
+
+    const size = clampFontSize(
+      value,
+      type === 'lyricFontSize'
+        ? DEFAULT_LYRIC_FONT_SIZE
+        : DEFAULT_CHORD_FONT_SIZE
+    );
+
+    if (song[type] === size) return;
+
+    song[type] = size;
+
+    commit(
+      type === 'lyricFontSize'
+        ? '歌詞サイズ変更'
+        : 'コードサイズ変更'
+    );
+
+    renderAll();
+  }
+
+  function resetFontSizes() {
+    if (!song) return;
+
+    if (
+      song.lyricFontSize === DEFAULT_LYRIC_FONT_SIZE &&
+      song.chordFontSize === DEFAULT_CHORD_FONT_SIZE
+    ) {
+      return;
+    }
+
+    song.lyricFontSize =
+      DEFAULT_LYRIC_FONT_SIZE;
+
+    song.chordFontSize =
+      DEFAULT_CHORD_FONT_SIZE;
+
+    commit('文字サイズを標準に戻す');
+    renderAll();
+  }
+
+  function openEditor(id) {
+    const target =
+      store.songs.find(
+        item => item.id === id
+      );
+
+    if (!target) return;
+
+    closeInlineInput();
+    song = target;
+    normalizeSong(song);
+    store.currentSongId = song.id;
+    selectedChordId = null;
+    mode = 'lyrics';
+    resetHistory();
+
+    els.home.classList.add('hidden');
+    els.editor.classList.remove('hidden');
+
+    renderAll();
+  }
+
+  function showHome() {
+    closeInlineInput();
+
+    if (dragState) {
+      endDrag();
+    }
+
+    persistStore();
+
+    els.editor.classList.add('hidden');
+    els.home.classList.remove('hidden');
+
+    renderHome();
+  }
+
+  function duplicateSong(id) {
+    const source =
+      store.songs.find(
+        item => item.id === id
+      );
+
+    if (!source) return;
+
+    const copied = clone(source);
+
+    copied.id = uid('song');
+    copied.title =
+      `${source.title || '無題'} のコピー`;
+    copied.updatedAt = Date.now();
+
+    const lineIds = new Map();
+
+    copied.lines.forEach(line => {
+      const oldId = line.id;
+      line.id = uid('line');
+      lineIds.set(oldId, line.id);
+    });
+
+    copied.chords.forEach(chord => {
+      chord.id = uid('chord');
+      chord.lineId =
+        lineIds.get(chord.lineId) ||
+        chord.lineId;
+    });
+
+    store.songs.push(copied);
+    persistStore();
+    renderHome();
+  }
+
+  function deleteSong(id) {
+    const target =
+      store.songs.find(
+        item => item.id === id
+      );
+
+    if (!target) return;
+
+    if (
+      !window.confirm(
+        `「${target.title || '無題'}」を削除しますか？`
+      )
+    ) {
+      return;
+    }
+
+    store.songs =
+      store.songs.filter(
+        item => item.id !== id
+      );
+
+    if (store.currentSongId === id) {
+      store.currentSongId = null;
+    }
+
+    if (song?.id === id) {
+      song = null;
+    }
+
+    persistStore();
+    renderHome();
+  }
+
+  function renderHome() {
+    els.songList.replaceChildren();
+
+    els.songCount.textContent =
+      `${store.songs.length}曲`;
+
+    els.emptyMessage.classList.toggle(
+      'hidden',
+      store.songs.length !== 0
+    );
+
+    [...store.songs]
+      .sort(
+        (a, b) =>
+          (b.updatedAt || 0) -
+          (a.updatedAt || 0)
+      )
+      .forEach(item => {
+        const card =
+          document.createElement('article');
+
+        card.className = 'song-card';
+
+        const title =
+          document.createElement('h3');
+
+        title.textContent =
+          item.title || '無題';
+
+        const artist =
+          document.createElement('p');
+
+        artist.textContent =
+          item.artist || 'アーティスト未設定';
+
+        const meta =
+          document.createElement('p');
+
+        meta.textContent = [
+          item.key ? `Key: ${item.key}` : '',
+          Number(item.capo)
+            ? `Capo: ${item.capo}`
+            : ''
+        ]
+          .filter(Boolean)
+          .join(' / ') ||
+          '曲情報未設定';
+
+        const updated =
+          document.createElement('p');
+
+        updated.textContent =
+          `更新: ${
+            new Date(
+              item.updatedAt || Date.now()
+            ).toLocaleString('ja-JP')
+          }`;
+
+        const actions =
+          document.createElement('div');
+
+        actions.className =
+          'song-card-actions';
+
+        const open =
+          document.createElement('button');
+
+        open.textContent = '開く';
+        open.addEventListener(
+          'click',
+          () => openEditor(item.id)
+        );
+
+        const duplicate =
+          document.createElement('button');
+
+        duplicate.textContent = '複製';
+        duplicate.addEventListener(
+          'click',
+          () => duplicateSong(item.id)
+        );
+
+        const remove =
+          document.createElement('button');
+
+        remove.className = 'delete-song';
+        remove.textContent = '削除';
+        remove.addEventListener(
+          'click',
+          () => deleteSong(item.id)
+        );
+
+        actions.append(
+          open,
+          duplicate,
+          remove
+        );
+
+        card.append(
+          title,
+          artist,
+          meta,
+          updated,
+          actions
+        );
+
+        els.songList.appendChild(card);
+      });
+  }
+
+  els.newSong.addEventListener(
+    'click',
+    () => {
+      const fresh = createSong();
+
+      store.songs.push(fresh);
+      persistStore();
+      openEditor(fresh.id);
+    }
+  );
+
+  els.homeBtn.addEventListener(
+    'click',
+    showHome
+  );
 
   els.lyrics.addEventListener(
     'input',
     () => {
       clearTimeout(lyricsTimer);
 
-      lyricsTimer = setTimeout(() => {
-        syncLyrics(els.lyrics.value);
-      }, 250);
+      lyricsTimer = setTimeout(
+        () => syncLyrics(els.lyrics.value),
+        250
+      );
     }
   );
 
@@ -789,6 +1266,31 @@
       updateMeta
     );
   });
+
+  els.lyricFontSize.addEventListener(
+    'input',
+    event => {
+      updateFontSize(
+        'lyricFontSize',
+        event.target.value
+      );
+    }
+  );
+
+  els.chordFontSize.addEventListener(
+    'input',
+    event => {
+      updateFontSize(
+        'chordFontSize',
+        event.target.value
+      );
+    }
+  );
+
+  els.resetFontSize.addEventListener(
+    'click',
+    resetFontSizes
+  );
 
   els.modes.lyrics.addEventListener(
     'click',
@@ -805,16 +1307,26 @@
     () => switchMode('preview')
   );
 
-  els.undo.addEventListener('click', undo);
-  els.redo.addEventListener('click', redo);
+  els.undo.addEventListener(
+    'click',
+    undo
+  );
 
-  els.print.addEventListener('click', () => {
-    renderPreview();
+  els.redo.addEventListener(
+    'click',
+    redo
+  );
 
-    requestAnimationFrame(() => {
-      window.print();
-    });
-  });
+  els.print.addEventListener(
+    'click',
+    () => {
+      renderPreview();
+
+      requestAnimationFrame(
+        () => window.print()
+      );
+    }
+  );
 
   window.addEventListener(
     'beforeprint',
@@ -862,11 +1374,17 @@
   document.addEventListener(
     'keydown',
     event => {
-      if (mode !== 'chords') return;
-      if (!getSelectedChord()) return;
+      if (
+        mode !== 'chords' ||
+        !getSelectedChord()
+      ) {
+        return;
+      }
 
       if (
-        event.target.matches('input, textarea')
+        event.target.matches(
+          'input, textarea'
+        )
       ) {
         return;
       }
@@ -897,12 +1415,16 @@
     }
   );
 
-  history.push({
-    song: clone(song),
-    label: '初期状態'
-  });
+  if (store.songs.length) {
+    const initial =
+      store.songs.find(
+        item => item.id === store.currentSongId
+      ) || store.songs[0];
 
-  historyIndex = 0;
+    song = initial;
+    normalizeSong(song);
+    resetHistory();
+  }
 
-  renderAll();
+  renderHome();
 })();
