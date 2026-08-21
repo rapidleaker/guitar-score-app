@@ -1,24 +1,42 @@
-<header class="home-header">
-  <div>
-    <h1>My Chords</h1>
-    <nav class="app-nav" aria-label="情報ページ">
-      <a href="how-to-use.html">使い方</a>
-      <a href="about.html">このアプリについて</a>
-      <a href="legal.html">規約・プライバシー</a>
-    </nav>
-  </div>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Guitar Score App｜弾き語りコード譜作成</title>
+  <meta name="description" content="歌詞とコードを組み合わせた弾き語り用コード譜を作成・編集できるWebアプリです。">
+  <link rel="stylesheet" href="styles.css">
+</head>
 
-  <button id="newSongBtn" class="primary-button">
-    ＋ 新しいコード譜を作成
-  </button>
-</header>
+<body>
+  <section id="homeScreen" class="home-screen">
+    <header class="home-header">
+      <div>
+        <h1>My Chords</h1>
+
+        <nav class="app-nav" aria-label="情報ページ">
+          <a href="how-to-use.html">使い方</a>
+          <a href="about.html">このアプリについて</a>
+          <a href="legal.html">規約・プライバシー</a>
+        </nav>
+      </div>
+
+      <button id="newSongBtn" class="primary-button">
+        ＋ 新しいコード譜を作成
+      </button>
+    </header>
+
     <main class="home-main">
       <div class="home-title-row">
         <h2>保存したコード譜</h2>
         <span id="songCount"></span>
       </div>
+
       <div id="songList" class="song-list"></div>
-      <p id="emptyMessage" class="empty-message hidden">保存したコード譜はありません。</p>
+
+      <p id="emptyMessage" class="empty-message hidden">
+        保存したコード譜はありません。
+      </p>
     </main>
   </section>
 
@@ -30,86 +48,128 @@
       </div>
 
       <div class="song-meta">
-        <label>曲名<input id="titleInput" type="text" placeholder="曲名"></label>
-        <label>アーティスト<input id="artistInput" type="text" placeholder="アーティスト名"></label>
-        <label>Key<input id="keyInput" type="text" placeholder="例: C"></label>
-        <label>Capo<input id="capoInput" type="number" min="0" max="12" value="0"></label>
+        <label>
+          曲名
+          <input id="titleInput" type="text" placeholder="曲名">
+        </label>
+
+        <label>
+          アーティスト
+          <input id="artistInput" type="text" placeholder="アーティスト名">
+        </label>
+
+        <label>
+          Key
+          <input id="keyInput" type="text" placeholder="例: C">
+        </label>
+
+        <label>
+          Capo
+          <input id="capoInput" type="number" min="0" max="12" value="0">
+        </label>
       </div>
 
       <details class="settings-panel">
-  <summary>フォント・サイズ設定</summary>
+        <summary>フォント・サイズ設定</summary>
 
-  <div class="font-options">
-    <div class="font-settings">
-      <label>
-        歌詞フォント
-        <select id="lyricFontFamilyInput">
-          <option value="sans-serif">システム標準</option>
-          <option value="serif">serif</option>
-          <option value="メイリオ">メイリオ</option>
-          <option value="游ゴシック">游ゴシック</option>
-          <option value="Georgia">Georgia</option>
-        </select>
-      </label>
+        <div class="font-options">
+          <div class="font-settings">
+            <label>
+              歌詞フォント
+              <select id="lyricFontFamilyInput">
+                <option value="sans-serif">システム標準</option>
+                <option value="serif">serif</option>
+                <option value="メイリオ">メイリオ</option>
+                <option value="游ゴシック">游ゴシック</option>
+                <option value="Georgia">Georgia</option>
+              </select>
+            </label>
 
-      <label>
-        コードフォント
-        <select id="chordFontFamilyInput">
-          <option value="monospace">monospace</option>
-          <option value="sans-serif">sans-serif</option>
-          <option value="serif">serif</option>
-          <option value="Arial">Arial</option>
-          <option value="Courier New">Courier New</option>
-          <option value="Georgia">Georgia</option>
-        </select>
-      </label>
-    </div>
+            <label>
+              コードフォント
+              <select id="chordFontFamilyInput">
+                <option value="monospace">monospace</option>
+                <option value="sans-serif">sans-serif</option>
+                <option value="serif">serif</option>
+                <option value="Arial">Arial</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+              </select>
+            </label>
+          </div>
 
-    <div class="font-size-settings">
-      <label>
-        歌詞サイズ
-        <div class="font-size-control">
-          <input id="lyricFontSizeInput" type="range" min="12" max="32" step="1">
-          <output id="lyricFontSizeValue">16</output>px
+          <div class="font-size-settings">
+            <label>
+              歌詞サイズ
+              <div class="font-size-control">
+                <input
+                  id="lyricFontSizeInput"
+                  type="range"
+                  min="12"
+                  max="32"
+                  step="1"
+                >
+                <output id="lyricFontSizeValue">16</output>px
+              </div>
+            </label>
+
+            <label>
+              コードサイズ
+              <div class="font-size-control">
+                <input
+                  id="chordFontSizeInput"
+                  type="range"
+                  min="12"
+                  max="32"
+                  step="1"
+                >
+                <output id="chordFontSizeValue">16</output>px
+              </div>
+            </label>
+
+            <button id="resetFontSizeBtn" type="button">
+              サイズを標準に戻す
+            </button>
+          </div>
         </div>
-      </label>
-
-      <label>
-        コードサイズ
-        <div class="font-size-control">
-          <input id="chordFontSizeInput" type="range" min="12" max="32" step="1">
-          <output id="chordFontSizeValue">16</output>px
-        </div>
-      </label>
-
-      <button id="resetFontSizeBtn" type="button">
-        サイズを標準に戻す
-      </button>
-    </div>
-  </div>
-</details>
+      </details>
 
       <div class="toolbar">
         <button id="lyricsMode" class="mode active">歌詞編集</button>
         <button id="chordsMode" class="mode">コード編集</button>
         <button id="previewMode" class="mode">プレビュー</button>
+
         <span class="spacer"></span>
+
         <button id="undoBtn">↶ 戻す</button>
         <button id="redoBtn">↷ やり直す</button>
         <button id="printBtn">印刷</button>
       </div>
+
       <div id="status" aria-live="polite"></div>
     </header>
 
     <main>
       <section id="lyricsEditor" class="panel">
-        <label for="lyricsInput" class="section-label">歌詞（改行・空行を保持します）</label>
-        <textarea id="lyricsInput" spellcheck="false" placeholder="歌詞を入力または貼り付けてください"></textarea>
+        <label for="lyricsInput" class="section-label">
+          歌詞（改行・空行を保持します）
+        </label>
+
+        <textarea
+          id="lyricsInput"
+          spellcheck="false"
+          placeholder="歌詞を入力または貼り付けてください"
+        ></textarea>
       </section>
 
       <section id="chordsEditor" class="panel hidden">
-        <p class="hint">歌詞をタップ／クリックすると、その文字位置にコードを追加できます。コードを選択してドラッグ、矢印キー、操作ボタンで調整できます。</p>
+        <p class="hint">
+          歌詞をタップ／クリックすると、その文字位置にコードを追加できます。
+          コードを選択してドラッグ、矢印キー、操作ボタンで調整できます。
+        </p>
+
         <div id="scoreEditor" class="score"></div>
+
         <div id="mobileControls" class="mobile-controls hidden">
           <button id="deleteChordBtn">削除</button>
           <button id="nudgeLeftBtn">←</button>
@@ -122,15 +182,17 @@
         <article id="previewSheet" class="sheet"></article>
       </section>
     </main>
-    </section>
+  </section>
 
   <footer class="site-footer app-footer">
     <div>Guitar Score App</div>
+
     <div class="footer-links">
       <a href="about.html">このアプリについて</a>
       <a href="how-to-use.html">使い方</a>
       <a href="legal.html">規約・プライバシー</a>
     </div>
+
     <small>© Guitar Score App</small>
   </footer>
 
