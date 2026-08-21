@@ -30,6 +30,10 @@ body {
   overflow-x: hidden;
 }
 
+body {
+  letter-spacing: 0.01em;
+}
+
 a {
   color: var(--accent-dark);
 }
@@ -46,7 +50,7 @@ a {
   justify-content: space-between;
   gap: 24px;
   width: min(100% - 36px, 1120px);
-  margin: auto;
+  margin: 0 auto;
   padding: 18px 0;
 }
 
@@ -71,9 +75,14 @@ nav a,
   text-decoration: none;
 }
 
+nav a:hover,
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
 .content {
   width: min(100% - 28px, 860px);
-  margin: auto;
+  margin: 0 auto;
   padding: 42px 0 60px;
 }
 
@@ -99,6 +108,11 @@ h2 {
 
 h3 {
   font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+p {
+  margin: 0 0 1em;
 }
 
 .lead {
@@ -119,6 +133,14 @@ h3 {
   margin: 6px 0;
 }
 
+.card code {
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: var(--accent-light);
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
 .button {
   display: inline-block;
   min-height: 44px;
@@ -131,6 +153,7 @@ h3 {
 }
 
 .button:hover {
+  color: #fff;
   background: var(--accent-dark);
 }
 
@@ -159,13 +182,24 @@ h3 {
 
   nav {
     justify-content: flex-start;
+    gap: 6px 14px;
   }
 
   nav a {
     padding: 5px 0;
+    font-size: 0.85rem;
   }
 
   .content {
     padding-top: 30px;
+  }
+
+  .card {
+    padding: 20px 18px;
+  }
+
+  .footer-links {
+    flex-direction: column;
+    gap: 6px;
   }
 }
