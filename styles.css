@@ -25,6 +25,8 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   color: var(--text);
   background: var(--bg);
   font-family:
@@ -208,9 +210,8 @@ select:focus-visible {
 /* 編集画面 */
 
 .app-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  position: static;
+  z-index: auto;
   padding:
     max(8px, env(safe-area-inset-top))
     clamp(14px, 4vw, 38px)
@@ -439,7 +440,9 @@ main {
 .sheet {
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
   padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .score-line,
@@ -569,6 +572,7 @@ main {
   body {
     width: 100%;
     overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .home-header {
@@ -591,7 +595,7 @@ main {
   }
 
   .app-header {
-    position: relative;
+    position: static;
     width: 100%;
     padding: 8px 12px;
   }
@@ -705,7 +709,7 @@ main {
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-y: visible;
   }
 
   .score-line,
