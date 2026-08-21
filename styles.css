@@ -803,3 +803,63 @@ main {
     color: #000 !important;
   }
 }
+ .app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 8px;
+}
+
+.app-nav a {
+  color: var(--accent-dark);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.app-nav a:hover {
+  text-decoration: underline;
+}
+
+.site-footer {
+  padding: 28px 18px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  background: #fff;
+  text-align: center;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  margin: 10px 0;
+}
+
+.footer-links a {
+  color: var(--accent-dark);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+.app-footer {
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+  .app-nav {
+    gap: 6px 12px;
+  }
+
+  .app-nav a {
+    font-size: 0.82rem;
+  }
+
+  .footer-links {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
