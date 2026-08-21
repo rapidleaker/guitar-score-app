@@ -1,15 +1,20 @@
 :root {
-  --bg: #f5f7fb;
+  --bg: #f2f7f9;
   --surface: #fff;
-  --text: #172033;
-  --muted: #667085;
-  --border: #d9deea;
-  --accent: #2563eb;
-  --accent-light: #e8f0ff;
-  --danger: #dc2626;
-  --shadow: 0 8px 24px rgba(20, 35, 70, .08);
+  --surface-muted: #f7fcfd;
+  --text: #111;
+  --muted: #66757a;
+  --border: #d5e3e7;
+  --accent: #00a9d6;
+  --accent-dark: #238ca8;
+  --accent-light: #e8f8fb;
+  --danger: #c62828;
+  --shadow: 0 6px 18px rgba(20, 80, 95, 0.08);
+
   --lyric-font-size: 16px;
   --chord-font-size: 16px;
+  --lyric-font-family: sans-serif;
+  --chord-font-family: monospace;
 }
 
 * {
@@ -22,37 +27,58 @@ body {
   margin: 0;
   color: var(--text);
   background: var(--bg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
   -webkit-text-size-adjust: 100%;
+}
+
+body {
+  letter-spacing: 0.01em;
 }
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
 button {
   min-height: 42px;
-  padding: .55rem .85rem;
+  padding: 0.6rem 0.95rem;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 5px;
   color: var(--text);
-  background: var(--surface);
+  background: #fff;
   cursor: pointer;
   touch-action: manipulation;
-  transition: background .15s, border-color .15s, color .15s;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
 button:hover {
-  border-color: #aeb8ca;
-  background: #f8fafc;
+  border-color: #aaa;
+  background: #f7f7f7;
+}
+
+button:active {
+  transform: translateY(1px);
 }
 
 button:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, .24);
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(0, 169, 214, 0.28);
   outline-offset: 2px;
 }
 
@@ -60,20 +86,30 @@ textarea:focus-visible {
   display: none !important;
 }
 
+/* ホーム画面 */
+
+.home-screen {
+  min-height: 100vh;
+}
+
 .home-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 24px clamp(16px, 4vw, 48px);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  gap: 20px;
+  padding: 22px clamp(18px, 5vw, 64px);
+  border-top: 4px solid var(--accent);
+  border-bottom: 1px solid #ccc;
+  background: #fff;
 }
 
 .home-header h1,
 .app-header h1 {
   margin: 0;
-  font-size: clamp(1.2rem, 2.6vw, 1.55rem);
+  color: #111;
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .primary-button {
@@ -83,90 +119,129 @@ textarea:focus-visible {
   font-weight: 700;
 }
 
+.primary-button:hover {
+  color: #fff;
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+}
+
 .home-main {
-  width: min(100%, 1100px);
+  width: min(100%, 1120px);
   margin: 0 auto;
-  padding: clamp(20px, 4vw, 42px);
+  padding: clamp(26px, 5vw, 58px) clamp(18px, 5vw, 56px);
 }
 
 .home-title-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid #222;
 }
 
 .home-title-row h2 {
   margin: 0;
+  font-size: clamp(1.3rem, 3vw, 1.75rem);
+  font-weight: 800;
 }
 
 #songCount {
   color: var(--muted);
-  font-size: .9rem;
+  font-size: 0.9rem;
 }
 
 .song-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
 }
 
 .song-card {
-  padding: 18px;
+  padding: 22px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
+  border-radius: 6px;
+  background: #fff;
   box-shadow: var(--shadow);
 }
 
+.song-card:hover {
+  border-color: #bbb;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.11);
+}
+
 .song-card h3 {
-  margin: 0 0 6px;
-  font-size: 1.1rem;
+  margin: 0 0 9px;
+  font-size: 1.2rem;
+  font-weight: 800;
 }
 
 .song-card p {
-  margin: 4px 0;
+  margin: 5px 0;
   color: var(--muted);
-  font-size: .9rem;
+  font-size: 0.88rem;
 }
 
 .song-card-actions {
   display: flex;
-  gap: 7px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 20px;
 }
 
 .song-card-actions button:first-child {
   flex: 1;
-  color: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  background: var(--accent);
   font-weight: 700;
+}
+
+.song-card-actions button:first-child:hover {
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
 }
 
 .song-card-actions .delete-song {
   color: var(--danger);
 }
 
-.empty-message {
-  color: var(--muted);
-}
+/* 編集画面 */
 
 .app-header {
   position: sticky;
   top: 0;
   z-index: 20;
-  padding: max(14px, env(safe-area-inset-top))
-    clamp(14px, 3vw, 32px) 14px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, .94);
-  box-shadow: 0 2px 12px rgba(20, 35, 70, .05);
-  backdrop-filter: blur(12px);
+  padding:
+    max(8px, env(safe-area-inset-top))
+    clamp(14px, 4vw, 38px)
+    8px;
+  border-top: 4px solid var(--accent);
+  border-bottom: 1px solid #ccc;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  backdrop-filter: blur(10px);
 }
 
 .editor-title-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 12px;
+  gap: 10px;
+  min-height: 36px;
+  margin-bottom: 6px;
+}
+
+.editor-title-row button {
+  flex-shrink: 0;
+  color: #222;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.editor-title-row h1 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .song-meta {
@@ -176,39 +251,97 @@ textarea:focus-visible {
     minmax(180px, 2fr)
     100px
     90px;
-  gap: 9px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .song-meta label,
+.font-settings label,
 .font-size-settings label {
   display: grid;
-  gap: 4px;
-  color: var(--muted);
-  font-size: .78rem;
-  font-weight: 600;
+  gap: 5px;
+  color: #555;
+  font-size: 0.76rem;
+  font-weight: 700;
 }
 
 input,
-textarea {
-  border: 1px solid var(--border);
-  border-radius: 9px;
+textarea,
+select {
+  border: 1px solid #cfcfcf;
+  border-radius: 5px;
   color: var(--text);
-  background: var(--surface);
+  background: #fff;
 }
 
-.song-meta input {
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: #aaa;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 169, 214, 0.1);
+}
+
+.song-meta input,
+.font-settings select {
   width: 100%;
   min-height: 40px;
-  padding: .55rem .65rem;
+  padding: 0.58rem 0.7rem;
+}
+
+/* 折りたたみ設定 */
+
+.settings-panel {
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-muted);
+}
+
+.settings-panel summary {
+  padding: 9px 14px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.settings-panel summary:hover {
+  color: var(--accent-dark);
+  background: var(--accent-light);
+}
+
+.settings-panel[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.font-options {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.4fr);
+  align-items: end;
+  gap: 18px;
+  padding: 12px 14px;
+}
+
+.font-settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(130px, 1fr));
+  gap: 10px;
+  margin: 0;
 }
 
 .font-size-settings {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 14px;
+  margin: 0;
 }
 
 .font-size-control {
@@ -218,33 +351,35 @@ textarea {
 }
 
 .font-size-settings input[type="range"] {
-  width: 150px;
+  width: 120px;
   accent-color: var(--accent);
 }
 
 .font-size-settings output {
   min-width: 42px;
-  color: var(--text);
+  color: #111;
   font-weight: 700;
 }
 
 .font-size-settings button {
   min-height: 36px;
-  padding: .4rem .65rem;
+  padding: 0.4rem 0.7rem;
 }
 
 .toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
+  margin-top: 3px;
+  margin-bottom: 3px;
 }
 
 .toolbar .mode.active {
+  color: #fff;
   border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-light);
-  font-weight: 700;
+  background: var(--accent);
+  font-weight: 800;
 }
 
 .spacer {
@@ -252,50 +387,53 @@ textarea {
 }
 
 #status {
-  min-height: 1.2em;
-  margin-top: 7px;
+  min-height: 0.8em;
+  margin-top: 3px;
   color: var(--muted);
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 main {
-  width: min(100%, 1100px);
+  width: min(100%, 1120px);
   margin: 0 auto;
-  padding: clamp(16px, 3vw, 32px);
+  padding: clamp(18px, 4vw, 38px) clamp(14px, 4vw, 42px);
 }
 
 .panel {
   min-width: 0;
-  padding: clamp(16px, 3vw, 28px);
+  padding: clamp(18px, 3vw, 32px);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--surface);
+  border-radius: 6px;
+  background: #fff;
   box-shadow: var(--shadow);
 }
 
 .section-label {
   display: block;
-  margin-bottom: 9px;
-  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 
 #lyricsInput {
   display: block;
   width: 100%;
   min-height: min(62vh, 620px);
+  padding: 16px;
   resize: vertical;
-  padding: 14px;
   font-size: 1rem;
-  line-height: 1.8;
+  line-height: 1.9;
   white-space: pre-wrap;
 }
 
 .hint {
-  margin: 0 0 16px;
+  margin: 0 0 18px;
   color: var(--muted);
-  font-size: .9rem;
-  line-height: 1.6;
+  font-size: 0.88rem;
+  line-height: 1.7;
 }
+
+/* コード譜 */
 
 .score,
 .sheet {
@@ -309,7 +447,9 @@ main {
   position: relative;
   min-height: 5.4em;
   padding-top: 2.8em;
+  color: #111;
   white-space: pre;
+  font-family: var(--lyric-font-family);
   font-size: var(--lyric-font-size);
   letter-spacing: 0;
   line-height: 1.8;
@@ -341,11 +481,12 @@ main {
   min-height: 38px;
   padding: 7px 9px;
   border: 1px solid transparent;
-  border-radius: 9px;
-  color: #0f3d9e;
+  border-radius: 5px;
+  color: var(--accent-dark);
   background: transparent;
+  font-family: var(--chord-font-family);
   font-size: var(--chord-font-size);
-  font-weight: 700;
+  font-weight: 800;
   text-align: center;
   user-select: none;
   cursor: grab;
@@ -354,7 +495,8 @@ main {
 
 .chord:hover,
 .chord.selected {
-  border-color: #9bb8f5;
+  border-color: var(--accent);
+  color: var(--accent-dark);
   background: var(--accent-light);
 }
 
@@ -364,14 +506,16 @@ main {
 
 .inline-chord-input {
   position: absolute;
-  z-index: 5;
   top: 0;
+  z-index: 5;
   width: 72px;
   min-height: 38px;
   padding: 6px 8px;
   border: 2px solid var(--accent);
-  border-radius: 8px;
+  border-radius: 5px;
+  color: #111;
   background: #fff;
+  font-family: var(--chord-font-family);
   text-align: center;
   transform: translateX(-50%);
 }
@@ -382,13 +526,13 @@ main {
   z-index: 8;
   display: grid;
   grid-template-columns: auto 48px minmax(72px, 1fr) 48px;
-  gap: 7px;
-  margin-top: 14px;
-  padding: 8px;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 9px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, .96);
-  box-shadow: var(--shadow);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
 }
 
 .mobile-controls input {
@@ -408,43 +552,132 @@ main {
 
 .sheet h2 {
   margin: 0;
-  font-size: clamp(1.35rem, 4vw, 2rem);
+  color: #111;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-weight: 800;
 }
 
 .sheet .artist {
-  margin: 4px 0 24px;
+  margin: 5px 0 26px;
   color: var(--muted);
 }
 
+/* スマートフォン */
+
 @media (max-width: 640px) {
+  html,
+  body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
   .home-header {
     align-items: stretch;
     flex-direction: column;
+    gap: 12px;
+    padding: 22px 18px;
+  }
+
+  .home-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .home-main {
+    padding: 28px 14px;
+  }
+
+  .song-list {
+    grid-template-columns: 1fr;
   }
 
   .app-header {
     position: relative;
+    width: 100%;
+    padding: 8px 12px;
+  }
+
+  .editor-title-row {
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .editor-title-row button {
+    min-height: 36px;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.82rem;
+  }
+
+  .editor-title-row h1 {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 1.25rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .song-meta {
     grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
-  .song-meta label:nth-child(-n+2) {
+  .song-meta label:nth-child(-n + 2) {
     grid-column: span 2;
   }
 
+  .song-meta input,
+  .font-settings select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .settings-panel {
+    width: 100%;
+  }
+
+  .font-options {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .font-settings {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
   .font-size-settings {
+    display: grid;
+    grid-template-columns: 1fr;
     align-items: stretch;
-    flex-direction: column;
+    gap: 10px;
+  }
+
+  .font-size-control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
   }
 
   .font-size-settings input[type="range"] {
     width: 100%;
+    min-width: 0;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 6px;
+    margin-top: 3px;
+    margin-bottom: 3px;
   }
 
   .toolbar button {
-    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    padding: 0.5rem 0.35rem;
+    font-size: 0.82rem;
   }
 
   .spacer {
@@ -452,14 +685,48 @@ main {
   }
 
   main {
-    padding: 12px;
+    width: 100%;
+    padding: 10px;
   }
 
   .panel {
-    padding: 14px;
-    border-radius: 12px;
+    width: 100%;
+    padding: 12px;
+  }
+
+  #lyricsInput {
+    width: 100%;
+    min-height: 60vh;
+    font-size: 1rem;
+  }
+
+  .score,
+  .sheet {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .score-line,
+  .preview-line {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .mobile-controls {
+    grid-template-columns: auto 44px minmax(0, 1fr) 44px;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .mobile-controls button,
+  .mobile-controls input {
+    min-width: 0;
   }
 }
+
+/* 印刷 */
 
 @media print {
   @page {
@@ -467,6 +734,7 @@ main {
   }
 
   body {
+    color: #000;
     background: #fff;
   }
 
@@ -474,6 +742,8 @@ main {
   .app-header,
   #lyricsEditor,
   #chordsEditor,
+  .settings-panel,
+  .font-settings,
   .font-size-settings,
   .mobile-controls,
   .toolbar,
@@ -481,7 +751,9 @@ main {
   .hint,
   button,
   input,
-  textarea {
+  textarea,
+  select,
+  .inline-chord-input {
     display: none !important;
   }
 
@@ -507,6 +779,7 @@ main {
     position: relative !important;
     min-height: 5.4em !important;
     padding-top: 2.8em !important;
+    color: #000 !important;
     white-space: pre !important;
     break-inside: avoid;
   }
@@ -517,10 +790,12 @@ main {
     position: absolute !important;
     top: 0 !important;
     transform: translateX(-50%) !important;
+    color: #000 !important;
   }
 
   .lyric-text,
   .lyric-char {
     visibility: visible !important;
+    color: #000 !important;
   }
 }
