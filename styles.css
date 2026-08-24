@@ -737,6 +737,13 @@ main {
     margin: 14mm;
   }
 
+.site-header,
+  .site-footer,
+  .app-nav,
+  .app-footer {
+    display: none !important;
+  }
+
   body {
     color: #000;
     background: #fff;
@@ -744,6 +751,7 @@ main {
 
   .home-screen,
   .app-header,
+  .site-footer,
   #lyricsEditor,
   #chordsEditor,
   .settings-panel,
@@ -775,34 +783,37 @@ main {
     border: 0 !important;
     box-shadow: none !important;
     overflow: visible !important;
-  }
 
   .preview-line {
-    display: block !important;
-    visibility: visible !important;
-    position: relative !important;
-    min-height: 5.4em !important;
-    padding-top: 2.8em !important;
-    color: #000 !important;
-    white-space: pre !important;
-    break-inside: avoid;
-  }
+  display: block !important;
+  visibility: visible !important;
+  position: relative !important;
+  min-height: 0.5em !important;
+  padding-top: 1.7em !important;
+  color: #000 !important;
+  white-space: pre !important;
+  break-inside: avoid;
+}
 
-  .preview-line > .chord {
-    display: block !important;
-    visibility: visible !important;
-    position: absolute !important;
-    top: 0 !important;
-    transform: translateX(-50%) !important;
-    color: #000 !important;
-  }
+.preview-line > .chord {
+  display: block !important;
+  visibility: visible !important;
+  position: absolute !important;
+  top: 0 !important;
+  transform: translateX(-50%) !important;
+  color: #000 !important;
+}
 
   .lyric-text,
   .lyric-char {
     visibility: visible !important;
     color: #000 !important;
   }
+  .sheet h2 {
+    font-size: 1.1rem !important;
+  }
 }
+
  .app-nav {
   display: flex;
   flex-wrap: wrap;
