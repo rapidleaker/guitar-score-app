@@ -3,8 +3,8 @@
 
   const STORAGE_KEY = 'guitar-score-app-v1';
   const MAX_HISTORY = 100;
-  const DEFAULT_LYRIC_FONT_SIZE = 16;
-  const DEFAULT_CHORD_FONT_SIZE = 16;
+  const DEFAULT_LYRIC_FONT_SIZE = 13;
+  const DEFAULT_CHORD_FONT_SIZE = 13;
   const DEFAULT_LYRIC_FONT_FAMILY = 'sans-serif';
   const DEFAULT_CHORD_FONT_FAMILY = 'monospace';
   const MIN_FONT_SIZE = 12;
