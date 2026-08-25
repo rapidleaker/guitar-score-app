@@ -1267,8 +1267,8 @@
   });
 
   els.resetFontSize.addEventListener('click', resetFontSizes);
-  els.copyChord.addEventListener('click', copySelectedChord);
-  els.pasteChord.addEventListener('click', pasteChord);
+  els.copyChord?.addEventListener('click', copySelectedChord);
+  els.pasteChord?.addEventListener('click', pasteChord);
   els.modes.lyrics.addEventListener('click', () => switchMode('lyrics'));
   els.modes.chords.addEventListener('click', () => switchMode('chords'));
   els.modes.preview.addEventListener('click', () => switchMode('preview'));
