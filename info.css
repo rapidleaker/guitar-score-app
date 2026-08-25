@@ -71,6 +71,9 @@ nav {
 
 nav a,
 .footer-links a {
+  display: inline-block;
+  min-height: 44px;
+  padding: 8px 0;
   font-size: 0.9rem;
   text-decoration: none;
 }
@@ -185,9 +188,11 @@ p {
     gap: 6px 14px;
   }
 
-  nav a {
-    padding: 5px 0;
-    font-size: 0.85rem;
+  nav a,
+  .footer-links a {
+   min-height: 44px;
+   padding: 8px 0;
+   font-size: 0.85rem;
   }
 
   .content {
