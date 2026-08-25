@@ -48,6 +48,8 @@
     undo: $('#undoBtn'),
     redo: $('#redoBtn'),
     print: $('#printBtn'),
+    copyChord: $('#copyChordBtn'),
+    pasteChord: $('#pasteChordBtn'),
     modes: {
       lyrics: $('#lyricsMode'),
       chords: $('#chordsMode'),
@@ -694,9 +696,7 @@
     });
 
     input.addEventListener('blur', () => {
-      setTimeout(() => {
-        if (input.isConnected && !cancelled) finish();
-      }, 80);
+      if (!cancelled) finish();
     });
   }
 
@@ -757,10 +757,8 @@
       }
     });
 
-    input.addEventListener('blur', () => {
-      setTimeout(() => {
-        if (input.isConnected && !cancelled) finish();
-      }, 80);
+        input.addEventListener('blur', () => {
+      if (!cancelled) finish();
     });
   }
 
@@ -797,6 +795,64 @@
 
     if (chord) {
       els.selectedChordName.value = chord.name;
+    }
+  }
+  
+  async function copySelectedChord() {
+    const chord = getSelectedChord();
+    if (!chord) return;
+
+    try {
+      await navigator.clipboard.writeText(chord.name);
+
+      if (els.status) {
+        els.status.textContent = `コード「${chord.name}」をコピーしました`;
+      }
+    } catch {
+      if (els.status) {
+        els.status.textContent =
+          'コピーできませんでした。HTTPS環境でお試しください';
+      }
+    }
+  }
+
+  async function pasteChord() {
+    if (!song) return;
+
+    let name = '';
+
+    try {
+      name = (await navigator.clipboard.readText()).trim();
+    } catch {
+      if (els.status) {
+        els.status.textContent =
+          '貼り付けできませんでした。ブラウザの許可を確認してください';
+      }
+      return;
+    }
+
+    if (!name) return;
+
+    const baseChord = getSelectedChord();
+
+    if (baseChord) {
+      song.chords.push({
+        id: uid('chord'),
+        name,
+        lineId: baseChord.lineId,
+        charIndex: baseChord.charIndex,
+        offset: baseChord.offset
+      });
+
+      commit('コード貼り付け');
+      selectedChordId = song.chords[song.chords.length - 1].id;
+      renderAllPreservingScroll();
+      return;
+    }
+
+    if (els.status) {
+      els.status.textContent =
+        '貼り付ける位置のコードを先に選択してください';
     }
   }
 
@@ -1211,6 +1267,8 @@
   });
 
   els.resetFontSize.addEventListener('click', resetFontSizes);
+  els.copyChord.addEventListener('click', copySelectedChord);
+  els.pasteChord.addEventListener('click', pasteChord);
   els.modes.lyrics.addEventListener('click', () => switchMode('lyrics'));
   els.modes.chords.addEventListener('click', () => switchMode('chords'));
   els.modes.preview.addEventListener('click', () => switchMode('preview'));
@@ -1255,6 +1313,18 @@
     if (inlineInput) return;
     if (mode !== 'chords' || !getSelectedChord()) return;
     if (event.target.matches('input, textarea, select')) return;
+    
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
+      event.preventDefault();
+      copySelectedChord();
+      return;
+    }
+
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
+      event.preventDefault();
+      pasteChord();
+      return;
+    }
 
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
