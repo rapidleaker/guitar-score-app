@@ -11,8 +11,8 @@
   --danger: #c62828;
   --shadow: 0 6px 18px rgba(20, 80, 95, 0.08);
 
-  --lyric-font-size: 16px;
-  --chord-font-size: 16px;
+  --lyric-font-size: 13px;
+  --chord-font-size: 13px;
   --lyric-font-family: sans-serif;
   --chord-font-family: monospace;
 }
@@ -737,21 +737,12 @@ main {
     margin: 14mm;
   }
 
-.site-header,
+  .home-header,
+  .app-header,
+  .site-header,
   .site-footer,
   .app-nav,
-  .app-footer {
-    display: none !important;
-  }
-
-  body {
-    color: #000;
-    background: #fff;
-  }
-
-  .home-screen,
-  .app-header,
-  .site-footer,
+  .app-footer,
   #lyricsEditor,
   #chordsEditor,
   .settings-panel,
@@ -769,6 +760,11 @@ main {
     display: none !important;
   }
 
+  body {
+    color: #000;
+    background: #fff;
+  }
+
   main,
   #preview,
   #previewSheet,
@@ -783,38 +779,43 @@ main {
     border: 0 !important;
     box-shadow: none !important;
     overflow: visible !important;
+  }
 
   .preview-line {
-  display: block !important;
-  visibility: visible !important;
-  position: relative !important;
-  min-height: 0.5em !important;
-  padding-top: 1.7em !important;
-  color: #000 !important;
-  white-space: pre !important;
-  break-inside: avoid;
-}
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    min-height: 4.2em !important;
+    padding-top: 2.2em !important;
+    color: #000 !important;
+    white-space: pre !important;
+    break-inside: avoid;
+  }
 
-.preview-line > .chord {
-  display: block !important;
-  visibility: visible !important;
-  position: absolute !important;
-  top: 0 !important;
-  transform: translateX(-50%) !important;
-  color: #000 !important;
-}
+  .preview-line > .chord {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    top: 0 !important;
+    transform: translateX(-50%) !important;
+    color: #000 !important;
+  }
 
   .lyric-text,
   .lyric-char {
     visibility: visible !important;
     color: #000 !important;
   }
+
   .sheet h2 {
-    font-size: 1.1rem !important;
+    font-size: 1.3rem !important;
+  }
+
+  .sheet .artist {
+    color: #000 !important;
   }
 }
-
- .app-nav {
+.app-nav {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 14px;
@@ -865,7 +866,10 @@ main {
     gap: 6px 12px;
   }
 
-  .app-nav a {
+  .app-nav a,
+  .footer-links a {
+    display: inline-block;
+    padding: 5px 0;
     font-size: 0.82rem;
   }
 
