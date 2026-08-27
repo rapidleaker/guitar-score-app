@@ -69,6 +69,8 @@
   let historyIndex = -1;
   let saveTimer = null;
   let lyricsBeforeEdit = '';
+  let longPressTimer = null;
+  let longPressTriggered = false;
 
   function uid(prefix) {
     return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -490,11 +492,35 @@
           return;
         }
 
-        element.addEventListener('pointerdown', startDrag, {
+        element.addEventListener('pointerdown', event => {
+          startLongPress(event);
+          startDrag(event);
+        }, {
           passive: false
         });
 
+        element.addEventListener('pointermove', cancelLongPress);
+
+        element.addEventListener('pointerup', event => {
+          cancelLongPress();
+
+          if (longPressTriggered) {
+            event.preventDefault();
+            event.stopPropagation();
+            longPressTriggered = false;
+          }
+        });
+
+        element.addEventListener('pointercancel', cancelLongPress);
+
         element.addEventListener('click', event => {
+          if (longPressTriggered) {
+            event.preventDefault();
+            event.stopPropagation();
+            longPressTriggered = false;
+            return;
+          }
+
           event.preventDefault();
           event.stopPropagation();
 
@@ -760,6 +786,42 @@
         input.addEventListener('blur', () => {
       if (!cancelled) finish();
     });
+  }
+
+  function startLongPress(event) {
+    if (event.pointerType === 'mouse') return;
+
+    const element = event.currentTarget;
+    const chord = getChordById(element.dataset.chordId);
+
+    if (!chord) return;
+
+    longPressTriggered = false;
+
+    longPressTimer = setTimeout(async () => {
+      longPressTriggered = true;
+      selectedChordId = chord.id;
+      updateMobileControls();
+
+      try {
+        await navigator.clipboard.writeText(chord.name);
+
+        if (els.status) {
+          els.status.textContent =
+            `コード「${chord.name}」をコピーしました`;
+        }
+      } catch {
+        if (els.status) {
+          els.status.textContent =
+            'コピーできませんでした。HTTPS環境でお試しください';
+        }
+      }
+    }, 600);
+  }
+
+  function cancelLongPress() {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
   }
 
   function selectChord(id) {
