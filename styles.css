@@ -492,6 +492,7 @@ main {
   font-size: var(--chord-font-size);
   font-weight: 800;
   text-align: center;
+  -webkit-user-select: none;
   user-select: none;
   cursor: grab;
   touch-action: none;
