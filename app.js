@@ -493,11 +493,15 @@
         }
 
         element.addEventListener('pointerdown', event => {
-          startLongPress(event);
-          startDrag(event);
-        }, {
-          passive: false
-        });
+  　　　　if (event.pointerType === 'touch') {
+  　　　　  event.preventDefault();
+ 　　　　 }
+
+  　　　　startLongPress(event);
+  　　　　startDrag(event);
+　　　　}, {
+  　　　　passive: false
+　　　　});
 
         element.addEventListener('pointermove', cancelLongPress);
 
