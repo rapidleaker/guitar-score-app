@@ -457,6 +457,7 @@ main {
   letter-spacing: 0;
   line-height: 1.8;
   font-kerning: none;
+  touch-action: manipulation;
 }
 
 .lyric-text {
