@@ -442,6 +442,7 @@ main {
   overflow-x: auto;
   overflow-y: visible;
   padding-bottom: 8px;
+  touch-action: manipulation;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -523,6 +524,10 @@ main {
   font-family: var(--chord-font-family);
   text-align: center;
   transform: translateX(-50%);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+
 }
 
 
