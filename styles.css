@@ -523,20 +523,6 @@ main {
   transform: translateX(-50%);
 }
 
-.mobile-controls {
-  position: sticky;
-  bottom: max(8px, env(safe-area-inset-bottom));
-  z-index: 8;
-  display: grid;
-  grid-template-columns: auto 48px minmax(72px, 1fr) 48px;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 9px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #fff;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
-}
 
 .mobile-controls input {
   width: 100%;
@@ -719,16 +705,49 @@ main {
   }
 
   .mobile-controls {
-    grid-template-columns: auto 44px minmax(0, 1fr) 44px;
-    width: 100%;
-    gap: 6px;
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 100;
+    display: grid;
+    grid-template-columns:
+      auto 36px minmax(55px, 1fr) 36px auto auto;
+    align-items: center;
+    gap: 4px;
+    width: auto;
+    margin: 0;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
   }
 
   .mobile-controls button,
   .mobile-controls input {
     min-width: 0;
+    min-height: 38px;
+    padding: 0.3rem 0.35rem;
+    font-size: 0.76rem;
+  }
+
+  .mobile-controls input {
+    width: 100%;
+    text-align: center;
+  }
+
+  #nudgeLeftBtn,
+  #nudgeRightBtn {
+    padding-right: 0.2rem;
+    padding-left: 0.2rem;
+  }
+
+  #chordsEditor {
+    padding-bottom: 76px;
   }
 }
+
 
 /* 印刷 */
 
