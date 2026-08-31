@@ -9,8 +9,7 @@
   --accent-dark: #238ca8;
   --accent-light: #e8f8fb;
   --danger: #c62828;
-  --shadow: 0 6px 18px rgba(20, 80, 95, 0.08);
-
+  --shadow: 0 6px 18px rgba(20, 80, 95, .08);
   --lyric-font-size: 13px;
   --chord-font-size: 13px;
   --lyric-font-family: sans-serif;
@@ -26,21 +25,9 @@ body {
   min-height: 100%;
   margin: 0;
   overflow-x: hidden;
-  overflow-y: auto;
   color: var(--text);
   background: var(--bg);
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    "Helvetica Neue",
-    Arial,
-    sans-serif;
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  letter-spacing: 0.01em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
 button,
@@ -52,43 +39,35 @@ select {
 
 button {
   min-height: 42px;
-  padding: 0.6rem 0.95rem;
+  padding: .6rem .95rem;
   border: 1px solid var(--border);
   border-radius: 5px;
-  color: var(--text);
   background: #fff;
   cursor: pointer;
   touch-action: manipulation;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.15s ease;
 }
 
 button:hover {
-  border-color: #aaa;
-  background: #f7f7f7;
+  border-color: var(--accent);
+  background: var(--accent-light);
 }
 
-button:active {
-  transform: translateY(1px);
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
 }
 
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid rgba(0, 169, 214, 0.28);
+  outline: 3px solid rgba(0, 169, 214, .28);
   outline-offset: 2px;
 }
 
 .hidden {
   display: none !important;
 }
-
-/* ホーム画面 */
 
 .home-screen {
   min-height: 100vh;
@@ -108,10 +87,8 @@ select:focus-visible {
 .home-header h1,
 .app-header h1 {
   margin: 0;
-  color: #111;
   font-size: clamp(1.35rem, 3vw, 1.8rem);
   font-weight: 800;
-  letter-spacing: -0.02em;
 }
 
 .primary-button {
@@ -121,16 +98,11 @@ select:focus-visible {
   font-weight: 700;
 }
 
-.primary-button:hover {
-  color: #fff;
-  border-color: var(--accent-dark);
-  background: var(--accent-dark);
-}
-
-.home-main {
+.home-main,
+main {
   width: min(100%, 1120px);
   margin: 0 auto;
-  padding: clamp(26px, 5vw, 58px) clamp(18px, 5vw, 56px);
+  padding: clamp(26px, 5vw, 58px) clamp(14px, 4vw, 42px);
 }
 
 .home-title-row {
@@ -144,13 +116,11 @@ select:focus-visible {
 
 .home-title-row h2 {
   margin: 0;
-  font-size: clamp(1.3rem, 3vw, 1.75rem);
-  font-weight: 800;
 }
 
 #songCount {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: .9rem;
 }
 
 .song-list {
@@ -167,21 +137,14 @@ select:focus-visible {
   box-shadow: var(--shadow);
 }
 
-.song-card:hover {
-  border-color: #bbb;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.11);
-}
-
 .song-card h3 {
   margin: 0 0 9px;
-  font-size: 1.2rem;
-  font-weight: 800;
 }
 
 .song-card p {
   margin: 5px 0;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: .88rem;
 }
 
 .song-card-actions {
@@ -195,32 +158,19 @@ select:focus-visible {
   color: #fff;
   border-color: var(--accent);
   background: var(--accent);
-  font-weight: 700;
 }
 
-.song-card-actions button:first-child:hover {
-  border-color: var(--accent-dark);
-  background: var(--accent-dark);
-}
-
-.song-card-actions .delete-song {
+.delete-song,
+#deleteChordBtn {
   color: var(--danger);
 }
 
-/* 編集画面 */
-
 .app-header {
-  position: static;
-  z-index: auto;
-  padding:
-    max(8px, env(safe-area-inset-top))
-    clamp(14px, 4vw, 38px)
-    8px;
+  padding: max(8px, env(safe-area-inset-top)) clamp(14px, 4vw, 38px) 8px;
   border-top: 4px solid var(--accent);
   border-bottom: 1px solid #ccc;
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .07);
 }
 
 .editor-title-row {
@@ -229,13 +179,6 @@ select:focus-visible {
   gap: 10px;
   min-height: 36px;
   margin-bottom: 6px;
-}
-
-.editor-title-row button {
-  flex-shrink: 0;
-  color: #222;
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 .editor-title-row h1 {
@@ -247,11 +190,7 @@ select:focus-visible {
 
 .song-meta {
   display: grid;
-  grid-template-columns:
-    minmax(180px, 2fr)
-    minmax(180px, 2fr)
-    100px
-    90px;
+  grid-template-columns: minmax(180px, 2fr) minmax(180px, 2fr) 100px 90px;
   gap: 10px;
   margin-bottom: 10px;
 }
@@ -262,7 +201,7 @@ select:focus-visible {
   display: grid;
   gap: 5px;
   color: #555;
-  font-size: 0.76rem;
+  font-size: .76rem;
   font-weight: 700;
 }
 
@@ -275,27 +214,12 @@ select {
   background: #fff;
 }
 
-input:hover,
-textarea:hover,
-select:hover {
-  border-color: #aaa;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0, 169, 214, 0.1);
-}
-
 .song-meta input,
 .font-settings select {
   width: 100%;
   min-height: 40px;
-  padding: 0.58rem 0.7rem;
+  padding: .58rem .7rem;
 }
-
-/* 折りたたみ設定 */
 
 .settings-panel {
   margin-bottom: 10px;
@@ -306,26 +230,13 @@ select:focus {
 
 .settings-panel summary {
   padding: 9px 14px;
-  color: var(--text);
-  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
-  user-select: none;
-}
-
-.settings-panel summary:hover {
-  color: var(--accent-dark);
-  background: var(--accent-light);
-}
-
-.settings-panel[open] summary {
-  border-bottom: 1px solid var(--border);
 }
 
 .font-options {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.4fr);
-  align-items: end;
   gap: 18px;
   padding: 12px 14px;
 }
@@ -334,7 +245,6 @@ select:focus {
   display: grid;
   grid-template-columns: repeat(2, minmax(130px, 1fr));
   gap: 10px;
-  margin: 0;
 }
 
 .font-size-settings {
@@ -342,7 +252,6 @@ select:focus {
   flex-wrap: wrap;
   align-items: end;
   gap: 14px;
-  margin: 0;
 }
 
 .font-size-control {
@@ -358,13 +267,6 @@ select:focus {
 
 .font-size-settings output {
   min-width: 42px;
-  color: #111;
-  font-weight: 700;
-}
-
-.font-size-settings button {
-  min-height: 36px;
-  padding: 0.4rem 0.7rem;
 }
 
 .toolbar {
@@ -372,8 +274,7 @@ select:focus {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin-top: 3px;
-  margin-bottom: 3px;
+  margin: 3px 0;
 }
 
 .toolbar .mode.active {
@@ -388,16 +289,10 @@ select:focus {
 }
 
 #status {
-  min-height: 0.8em;
+  min-height: .8em;
   margin-top: 3px;
   color: var(--muted);
-  font-size: 0.8rem;
-}
-
-main {
-  width: min(100%, 1120px);
-  margin: 0 auto;
-  padding: clamp(18px, 4vw, 38px) clamp(14px, 4vw, 42px);
+  font-size: .8rem;
 }
 
 .panel {
@@ -407,13 +302,6 @@ main {
   border-radius: 6px;
   background: #fff;
   box-shadow: var(--shadow);
-}
-
-.section-label {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 1.05rem;
-  font-weight: 800;
 }
 
 #lyricsInput {
@@ -430,11 +318,67 @@ main {
 .hint {
   margin: 0 0 18px;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: .88rem;
   line-height: 1.7;
 }
 
-/* コード譜 */
+.chord-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, .5fr);
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-muted);
+}
+
+.tool-section h2 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.palette-tabs,
+.chord-palette,
+.transpose-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.palette-tab.active,
+.chord-palette button.selected {
+  color: #fff;
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.chord-palette button {
+  min-width: 52px;
+  min-height: 38px;
+  padding: .4rem .65rem;
+  color: var(--accent-dark);
+  font-weight: 700;
+}
+
+#clearPaletteBtn,
+#closePaletteBtn,
+#resetTransposeBtn {
+  min-height: 36px;
+  margin-top: 8px;
+  padding: .4rem .7rem;
+}
+
+.palette-close-button {
+  display: none;
+}
+
+.transpose-controls output {
+  min-width: 42px;
+  font-weight: 800;
+  text-align: center;
+}
 
 .score,
 .sheet {
@@ -443,22 +387,25 @@ main {
   overflow-y: visible;
   padding-bottom: 8px;
   touch-action: manipulation;
-  -webkit-overflow-scrolling: touch;
 }
 
 .score-line,
 .preview-line {
   position: relative;
+  min-width: max-content;
   min-height: 5.4em;
   padding-top: 2.8em;
-  color: #111;
   white-space: pre;
   font-family: var(--lyric-font-family);
   font-size: var(--lyric-font-size);
-  letter-spacing: 0;
   line-height: 1.8;
   font-kerning: none;
-  touch-action: manipulation;
+}
+
+.score-line > .chord,
+.preview-line > .chord {
+  left: 0;
+  margin: 0;
 }
 
 .lyric-text {
@@ -493,7 +440,6 @@ main {
   font-size: var(--chord-font-size);
   font-weight: 800;
   text-align: center;
-  -webkit-user-select: none;
   user-select: none;
   cursor: grab;
   touch-action: none;
@@ -502,12 +448,7 @@ main {
 .chord:hover,
 .chord.selected {
   border-color: var(--accent);
-  color: var(--accent-dark);
   background: var(--accent-light);
-}
-
-.chord:active {
-  cursor: grabbing;
 }
 
 .inline-chord-input {
@@ -518,25 +459,10 @@ main {
   min-height: 38px;
   padding: 6px 8px;
   border: 2px solid var(--accent);
-  border-radius: 5px;
-  color: #111;
-  background: #fff;
-  font-family: var(--chord-font-family);
   text-align: center;
   transform: translateX(-50%);
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-
 }
 
-
-.mobile-controls input {
-  width: 100%;
-  min-height: 42px;
-  padding: 6px;
-  text-align: center;
-}
 .mobile-controls {
   position: fixed;
   left: 50%;
@@ -546,33 +472,31 @@ main {
   align-items: center;
   gap: 6px;
   width: min(720px, calc(100vw - 24px));
-  min-width: 0;
-  margin: 0;
   padding: 6px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .18);
   transform: translateX(-50%);
+}
+
+.mobile-controls input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 38px;
+  padding: 6px;
+  text-align: center;
 }
 
 .mobile-controls button {
   flex: 0 0 auto;
   min-height: 38px;
-  padding: 0.4rem 0.7rem;
+  padding: .4rem .7rem;
   white-space: nowrap;
 }
 
-.mobile-controls input {
-  flex: 1 1 auto;
-  width: auto;
-  min-width: 0;
-  min-height: 38px;
-  text-align: center;
-}
-
-#deleteChordBtn {
-  color: var(--danger);
+.palette-backdrop {
+  display: none;
 }
 
 .sheet {
@@ -581,9 +505,6 @@ main {
 
 .sheet h2 {
   margin: 0;
-  color: #111;
-  font-size: clamp(1.4rem, 4vw, 2rem);
-  font-weight: 800;
 }
 
 .sheet .artist {
@@ -591,16 +512,73 @@ main {
   color: var(--muted);
 }
 
-/* スマートフォン */
+.app-nav,
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
 
-@media (max-width: 640px) {
-  html,
-  body {
-    width: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
+.app-nav {
+  margin-top: 8px;
+}
+
+.app-nav a,
+.footer-links a {
+  color: var(--accent-dark);
+  text-decoration: none;
+}
+
+.site-footer {
+  padding: 28px 18px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  background: #fff;
+  text-align: center;
+}
+
+.footer-links {
+  justify-content: center;
+  margin: 10px 0;
+}
+
+@media (min-width: 641px) {
+  .chord-tools {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) 220px;
+    align-items: start;
+    gap: 14px;
   }
 
+  .chord-tools::before {
+    content: "コード";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    padding: 10px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--accent-dark);
+    background: var(--accent-light);
+    font-weight: 800;
+    letter-spacing: .15em;
+    writing-mode: vertical-rl;
+  }
+
+  .chord-palette {
+    max-height: 120px;
+    overflow-y: auto;
+    align-content: flex-start;
+  }
+
+  .transposition-tool {
+    padding-left: 14px;
+    border-left: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 640px) {
   .home-header {
     align-items: stretch;
     flex-direction: column;
@@ -608,42 +586,8 @@ main {
     padding: 22px 18px;
   }
 
-  .home-header h1 {
-    font-size: 1.35rem;
-  }
-
-  .home-main {
-    padding: 28px 14px;
-  }
-
-  .song-list {
-    grid-template-columns: 1fr;
-  }
-
   .app-header {
-    position: static;
-    width: 100%;
     padding: 8px 12px;
-  }
-
-  .editor-title-row {
-    width: 100%;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-
-  .editor-title-row button {
-    min-height: 36px;
-    padding: 0.45rem 0.6rem;
-    font-size: 0.82rem;
-  }
-
-  .editor-title-row h1 {
-    min-width: 0;
-    overflow: hidden;
-    font-size: 1.25rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .song-meta {
@@ -655,59 +599,27 @@ main {
     grid-column: span 2;
   }
 
-  .song-meta input,
-  .font-settings select {
-    min-width: 0;
-    width: 100%;
-  }
-
-  .settings-panel {
-    width: 100%;
-  }
-
-  .font-options {
+  .font-options,
+  .chord-tools {
     grid-template-columns: 1fr;
     gap: 10px;
-    padding: 10px;
   }
 
   .font-settings {
-    grid-template-columns: 1fr 1fr;
     gap: 8px;
-  }
-
-  .font-size-settings {
-    display: grid;
-    grid-template-columns: 1fr;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .font-size-control {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    width: 100%;
-  }
-
-  .font-size-settings input[type="range"] {
-    width: 100%;
-    min-width: 0;
   }
 
   .toolbar {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
-    gap: 6px;
-    margin-top: 3px;
-    margin-bottom: 3px;
   }
 
   .toolbar button {
     width: 100%;
     min-width: 0;
-    padding: 0.5rem 0.35rem;
-    font-size: 0.82rem;
+    padding: .5rem .35rem;
+    font-size: .82rem;
   }
 
   .spacer {
@@ -724,20 +636,6 @@ main {
     padding: 12px;
   }
 
-  #lyricsInput {
-    width: 100%;
-    min-height: 60vh;
-    font-size: 1rem;
-  }
-
-  .score,
-  .sheet {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: visible;
-  }
-
   .score-line,
   .preview-line {
     width: max-content;
@@ -745,73 +643,118 @@ main {
   }
 
   .mobile-controls {
-    position: fixed;
     left: 8px;
     right: 8px;
     bottom: max(8px, env(safe-area-inset-bottom));
-    z-index: 100;
     display: grid;
-    grid-template-columns:
-      auto 36px minmax(55px, 1fr) 36px auto auto;
-    align-items: center;
-    gap: 4px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     width: auto;
     transform: none;
-    margin: 0;
-    padding: 6px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.97);
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
-  }
-
-  .mobile-controls button,
-  .mobile-controls input {
-    min-width: 0;
-    min-height: 38px;
-    padding: 0.3rem 0.35rem;
-    font-size: 0.76rem;
   }
 
   .mobile-controls input {
+    grid-column: span 2;
     width: 100%;
-    text-align: center;
   }
 
-  #nudgeLeftBtn,
-  #nudgeRightBtn {
-    padding-right: 0.2rem;
-    padding-left: 0.2rem;
+  .mobile-controls button {
+    width: 100%;
+    min-width: 0;
+    padding: .3rem .25rem;
+    font-size: .74rem;
   }
 
   #chordsEditor {
-    padding-bottom: 86px;
+    padding-bottom: 150px;
+  }
+
+  #chordTools {
+    display: none;
+  }
+
+  #chordTools.mobile-palette-open {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: 82px;
+    z-index: 111;
+    display: block;
+    max-height: 42vh;
+    overflow-y: auto;
+    margin: 0;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .98);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .2);
+  }
+
+  #chordTools.mobile-palette-open .palette-close-button {
+    display: inline-block;
+  }
+
+  #chordTools.mobile-palette-open .transposition-tool {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  #chordPalette {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  #chordPalette button {
+    min-width: 0;
+    min-height: 42px;
+    padding: .35rem;
+  }
+
+  .palette-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 109;
+    display: block;
+    background: rgba(0, 0, 0, .2);
+  }
+
+  .palette-backdrop.hidden {
+    display: none;
+  }
+
+  .palette-tabs {
+    width: 100%;
+  }
+
+  .palette-tabs button {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-left: .45rem;
+    padding-right: .45rem;
+  }
+
+  .footer-links {
+    flex-direction: column;
+    gap: 6px;
   }
 }
 
-
-/* 印刷 */
-
 @media print {
-  @page {
-    margin: 14mm;
-  }
-
   .home-header,
   .app-header,
-  .site-header,
   .site-footer,
   .app-nav,
-  .app-footer,
   #lyricsEditor,
   #chordsEditor,
   .settings-panel,
-  .font-settings,
-  .font-size-settings,
-  .mobile-controls,
   .toolbar,
   #status,
   .hint,
+  .chord-tools,
+  .palette-backdrop,
+  .mobile-controls,
   button,
   input,
   textarea,
@@ -843,7 +786,6 @@ main {
 
   .preview-line {
     display: block !important;
-    visibility: visible !important;
     position: relative !important;
     min-height: 4.2em !important;
     padding-top: 2.2em !important;
@@ -857,7 +799,6 @@ main {
     visibility: visible !important;
     position: absolute !important;
     top: 0 !important;
-    transform: translateX(-50%) !important;
     color: #000 !important;
   }
 
@@ -867,74 +808,7 @@ main {
     color: #000 !important;
   }
 
-  .sheet h2 {
-    font-size: 1.3rem !important;
-  }
-
   .sheet .artist {
     color: #000 !important;
-  }
-}
-.app-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  margin-top: 8px;
-}
-
-.app-nav a {
-  color: var(--accent-dark);
-  font-size: 0.85rem;
-  text-decoration: none;
-}
-
-.app-nav a:hover {
-  text-decoration: underline;
-}
-
-.site-footer {
-  padding: 28px 18px;
-  border-top: 1px solid var(--border);
-  color: var(--muted);
-  background: #fff;
-  text-align: center;
-}
-
-.footer-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 18px;
-  margin: 10px 0;
-}
-
-.footer-links a {
-  color: var(--accent-dark);
-  text-decoration: none;
-}
-
-.footer-links a:hover {
-  text-decoration: underline;
-}
-
-.app-footer {
-  margin-top: 20px;
-}
-
-@media (max-width: 640px) {
-  .app-nav {
-    gap: 6px 12px;
-  }
-
-  .app-nav a,
-  .footer-links a {
-    display: inline-block;
-    padding: 5px 0;
-    font-size: 0.82rem;
-  }
-
-  .footer-links {
-    flex-direction: column;
-    gap: 6px;
   }
 }
