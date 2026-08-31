@@ -3,53 +3,89 @@
 
   const STORAGE_KEY = 'guitar-score-app-v1';
   const MAX_HISTORY = 100;
-  const DEFAULT_LYRIC_FONT_SIZE = 13;
-  const DEFAULT_CHORD_FONT_SIZE = 13;
-  const DEFAULT_LYRIC_FONT_FAMILY = 'sans-serif';
-  const DEFAULT_CHORD_FONT_FAMILY = 'monospace';
-  const MIN_FONT_SIZE = 12;
-  const MAX_FONT_SIZE = 32;
-  const DOUBLE_TAP_DELAY = 450;
+  const LONG_PRESS = 600;
   const DRAG_THRESHOLD = 5;
+  const DUPLICATE_OFFSET = 20;
+
+  const DEFAULTS = {
+    lyricFontSize: 13,
+    chordFontSize: 13,
+    lyricFontFamily: 'sans-serif',
+    chordFontFamily: 'monospace'
+  };
 
   const $ = selector => document.querySelector(selector);
+  const clone = value => JSON.parse(JSON.stringify(value));
+
+  const clamp = (value, min, max, fallback) => {
+    const number = Number(value);
+
+    return Number.isFinite(number)
+      ? Math.min(max, Math.max(min, number))
+      : fallback;
+  };
+
+  const uid = prefix =>
+    `${prefix}-${Date.now().toString(36)}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
 
   const els = {
     home: $('#homeScreen'),
     editor: $('#editorScreen'),
     songList: $('#songList'),
     songCount: $('#songCount'),
-    emptyMessage: $('#emptyMessage'),
+    empty: $('#emptyMessage'),
     newSong: $('#newSongBtn'),
     homeBtn: $('#homeBtn'),
+
     title: $('#titleInput'),
     artist: $('#artistInput'),
     key: $('#keyInput'),
     capo: $('#capoInput'),
-    lyricFontSize: $('#lyricFontSizeInput'),
-    chordFontSize: $('#chordFontSizeInput'),
-    lyricFontSizeValue: $('#lyricFontSizeValue'),
-    chordFontSizeValue: $('#chordFontSizeValue'),
-    resetFontSize: $('#resetFontSizeBtn'),
-    lyricFontFamily: $('#lyricFontFamilyInput'),
-    chordFontFamily: $('#chordFontFamilyInput'),
+
     lyrics: $('#lyricsInput'),
     score: $('#scoreEditor'),
+    preview: $('#preview'),
     previewSheet: $('#previewSheet'),
     lyricsEditor: $('#lyricsEditor'),
     chordsEditor: $('#chordsEditor'),
-    preview: $('#preview'),
-    mobileControls: $('#mobileControls'),
-    selectedChordName: $('#selectedChordName'),
-    deleteChord: $('#deleteChordBtn'),
-    nudgeLeft: $('#nudgeLeftBtn'),
-    nudgeRight: $('#nudgeRightBtn'),
-    status: $('#status'),
+
+    chordTools: $('#chordTools'),
+    palette: $('#chordPalette'),
+    paletteTabs: [...document.querySelectorAll('.palette-tab')],
+    clearPalette: $('#clearPaletteBtn'),
+    closePalette: $('#closePaletteBtn'),
+    paletteBackdrop: $('#paletteBackdrop'),
+
+    mobile: $('#mobileControls'),
+    addChord: $('#addChordBtn'),
+    selectedName: $('#selectedChordName'),
+    delete: $('#deleteChordBtn'),
+    duplicate: $('#duplicateChordBtn'),
+    left: $('#nudgeLeftBtn'),
+    right: $('#nudgeRightBtn'),
+    copy: $('#copyChordBtn'),
+    paste: $('#pasteChordBtn'),
+
+    transposeDown: $('#transposeDownBtn'),
+    transposeUp: $('#transposeUpBtn'),
+    transposeValue: $('#transposeValue'),
+    resetTranspose: $('#resetTransposeBtn'),
+
     undo: $('#undoBtn'),
     redo: $('#redoBtn'),
     print: $('#printBtn'),
-    copyChord: $('#copyChordBtn'),
-    pasteChord: $('#pasteChordBtn'),
+    status: $('#status'),
+
+    lyricSize: $('#lyricFontSizeInput'),
+    chordSize: $('#chordFontSizeInput'),
+    lyricSizeValue: $('#lyricFontSizeValue'),
+    chordSizeValue: $('#chordFontSizeValue'),
+    lyricFamily: $('#lyricFontFamilyInput'),
+    chordFamily: $('#chordFontFamilyInput'),
+    resetSize: $('#resetFontSizeBtn'),
+
     modes: {
       lyrics: $('#lyricsMode'),
       chords: $('#chordsMode'),
@@ -57,49 +93,49 @@
     }
   };
 
+  const palettes = {
+    basic: [
+      'C', 'D', 'E', 'F', 'G', 'A', 'B'
+    ],
+    minor: [
+      'Am', 'Bm', 'Cm', 'Dm', 'Em', 'Fm', 'Gm'
+    ],
+    seventh: [
+      'C7', 'D7', 'E7', 'F7', 'G7', 'A7', 'B7'
+    ],
+    other: [
+      'Cmaj7', 'Dmaj7', 'Fmaj7', 'Gmaj7',
+      'Am7', 'Dm7', 'Em7',
+      'Asus4', 'Dsus4', 'Esus4',
+      'Cadd9', 'Dadd9', 'Gadd9'
+    ]
+  };
+
   let store = loadStore();
   let song = null;
   let mode = 'lyrics';
   let selectedChordId = null;
+  let selectedPaletteChord = null;
   let inlineInput = null;
   let dragState = null;
-  let suppressChordActivation = false;
-  let lastTap = { id: null, time: 0 };
   let history = [];
   let historyIndex = -1;
   let saveTimer = null;
   let lyricsBeforeEdit = '';
   let longPressTimer = null;
   let longPressTriggered = false;
-
-  function uid(prefix) {
-    return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-  }
-
-  function clone(value) {
-    return JSON.parse(JSON.stringify(value));
-  }
-
-  function clamp(value, min, max, fallback) {
-    const number = Number(value);
-    return Number.isFinite(number)
-      ? Math.min(max, Math.max(min, number))
-      : fallback;
-  }
-
-  function normalizeFontFamily(value, fallback) {
-    return typeof value === 'string' && value.trim()
-      ? value.trim()
-      : fallback;
-  }
+  let suppressChordActivation = false;
 
   function normalizeSong(target) {
-    if (!target || typeof target !== 'object') return null;
+    if (!target || typeof target !== 'object') {
+      return null;
+    }
 
     target.id = target.id || uid('song');
     target.title = String(target.title || '');
     target.artist = String(target.artist || '');
     target.key = String(target.key || '');
+
     target.lyrics = String(
       target.lyrics ??
       (Array.isArray(target.lines)
@@ -108,8 +144,8 @@
     );
 
     target.capo = clamp(target.capo, 0, 12, 0);
+    target.transpose = clamp(target.transpose, -12, 12, 0);
     target.updatedAt = Number(target.updatedAt) || Date.now();
-    target.chords = Array.isArray(target.chords) ? target.chords : [];
 
     const oldLines = Array.isArray(target.lines)
       ? target.lines
@@ -121,66 +157,60 @@
     }));
 
     if (!target.lines.length) {
-      target.lines.push({ id: uid('line'), text: '' });
+      target.lines.push({
+        id: uid('line'),
+        text: ''
+      });
     }
 
-    const validLineIds = new Set(target.lines.map(line => line.id));
+    const validLineIds = new Set(
+      target.lines.map(line => line.id)
+    );
 
-    target.chords = target.chords
-      .map(chord => ({
-        id: chord.id || uid('chord'),
-        name: String(chord.name || ''),
-        lineId: validLineIds.has(chord.lineId)
-          ? chord.lineId
-          : target.lines[0].id,
-        charIndex: Math.max(0, Number(chord.charIndex) || 0),
-        offset: Number(chord.offset) || 0
-      }))
-      .filter(chord => chord.name);
+    target.chords = Array.isArray(target.chords)
+      ? target.chords
+          .map(chord => ({
+            id: chord.id || uid('chord'),
+            name: String(chord.name || ''),
+            lineId: validLineIds.has(chord.lineId)
+              ? chord.lineId
+              : target.lines[0].id,
+            charIndex: Math.max(
+              0,
+              Number(chord.charIndex) || 0
+            ),
+            offset: Number(chord.offset) || 0
+          }))
+          .filter(chord => chord.name)
+      : [];
 
     target.lyricFontSize = clamp(
       target.lyricFontSize,
-      MIN_FONT_SIZE,
-      MAX_FONT_SIZE,
-      DEFAULT_LYRIC_FONT_SIZE
+      12,
+      32,
+      DEFAULTS.lyricFontSize
     );
 
     target.chordFontSize = clamp(
       target.chordFontSize,
-      MIN_FONT_SIZE,
-      MAX_FONT_SIZE,
-      DEFAULT_CHORD_FONT_SIZE
+      12,
+      32,
+      DEFAULTS.chordFontSize
     );
 
-    target.lyricFontFamily = normalizeFontFamily(
-      target.lyricFontFamily,
-      DEFAULT_LYRIC_FONT_FAMILY
-    );
+    target.lyricFontFamily =
+      typeof target.lyricFontFamily === 'string' &&
+      target.lyricFontFamily.trim()
+        ? target.lyricFontFamily.trim()
+        : DEFAULTS.lyricFontFamily;
 
-    target.chordFontFamily = normalizeFontFamily(
-      target.chordFontFamily,
-      DEFAULT_CHORD_FONT_FAMILY
-    );
+    target.chordFontFamily =
+      typeof target.chordFontFamily === 'string' &&
+      target.chordFontFamily.trim()
+        ? target.chordFontFamily.trim()
+        : DEFAULTS.chordFontFamily;
 
     return target;
-  }
-
-  function createSong() {
-    return normalizeSong({
-      id: uid('song'),
-      title: '',
-      artist: '',
-      key: '',
-      capo: 0,
-      lyrics: '',
-      lines: [{ id: uid('line'), text: '' }],
-      chords: [],
-      lyricFontSize: DEFAULT_LYRIC_FONT_SIZE,
-      chordFontSize: DEFAULT_CHORD_FONT_SIZE,
-      lyricFontFamily: DEFAULT_LYRIC_FONT_FAMILY,
-      chordFontFamily: DEFAULT_CHORD_FONT_FAMILY,
-      updatedAt: Date.now()
-    });
   }
 
   function loadStore() {
@@ -192,81 +222,77 @@
 
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return emptyStore;
+
+      if (!raw) {
+        return emptyStore;
+      }
 
       const saved = JSON.parse(raw);
 
       if (Array.isArray(saved.songs)) {
-        const result = {
+        return {
           version: 2,
-          songs: saved.songs.map(normalizeSong).filter(Boolean),
+          songs: saved.songs
+            .map(normalizeSong)
+            .filter(Boolean),
           currentSongId: saved.currentSongId || null
         };
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
-        return result;
       }
 
       const migratedSong = normalizeSong(saved);
-      const migrated = {
+
+      return {
         version: 2,
         songs: migratedSong ? [migratedSong] : [],
         currentSongId: migratedSong?.id || null
       };
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-      return migrated;
     } catch {
       return emptyStore;
     }
   }
 
-  function persistStore() {
-    store.currentSongId = song?.id || store.currentSongId || null;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  function persist() {
+    if (song) {
+      store.currentSongId = song.id;
+    }
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(store)
+    );
   }
 
-  function touchSong() {
-    if (song) song.updatedAt = Date.now();
-  }
-
-  function saveSong() {
+  function save() {
     clearTimeout(saveTimer);
 
     saveTimer = setTimeout(() => {
-      if (!song) return;
+      if (!song) {
+        return;
+      }
 
-      touchSong();
+      song.updatedAt = Date.now();
 
-      const index = store.songs.findIndex(item => item.id === song.id);
+      const index = store.songs.findIndex(
+        item => item.id === song.id
+      );
 
       if (index >= 0) {
-        store.songs[index] = song;
+        store.songs[index] = clone(song);
       }
 
-      persistStore();
-
-      if (els.status) {
-        els.status.textContent = '自動保存しました';
-
-        setTimeout(() => {
-          if (els.status) els.status.textContent = '';
-        }, 1500);
-      }
+      persist();
     }, 150);
   }
 
-  function updateHistoryButtons() {
-    els.undo.disabled = historyIndex <= 0;
-    els.redo.disabled = historyIndex >= history.length - 1;
-  }
-
   function commit(label) {
-    if (!song) return;
+    if (!song) {
+      return;
+    }
 
-    touchSong();
+    song.updatedAt = Date.now();
 
     history = history.slice(0, historyIndex + 1);
+
     history.push({
       song: clone(song),
       label
@@ -277,120 +303,68 @@
     }
 
     historyIndex = history.length - 1;
+
     updateHistoryButtons();
-    saveSong();
+    save();
   }
 
   function resetHistory() {
-    history = [{
-      song: clone(song),
-      label: '初期状態'
-    }];
+    history = [
+      {
+        song: clone(song),
+        label: '初期状態'
+      }
+    ];
 
     historyIndex = 0;
     updateHistoryButtons();
   }
 
-  function getScrollState() {
-    return {
-      pageX: window.scrollX,
-      pageY: window.scrollY,
-      scoreLeft: els.score?.scrollLeft || 0,
-      scoreTop: els.score?.scrollTop || 0
-    };
-  }
-
-  function restoreScrollState(state) {
-    if (!state) return;
-
-    const restore = () => {
-      window.scrollTo(state.pageX, state.pageY);
-
-      if (els.score) {
-        els.score.scrollLeft = state.scoreLeft;
-        els.score.scrollTop = state.scoreTop;
-      }
-    };
-
-    restore();
-    requestAnimationFrame(restore);
-  }
-
-  function renderAllPreservingScroll() {
-    const state = getScrollState();
-    renderAll();
-    restoreScrollState(state);
-  }
-
-  function undo() {
-    if (historyIndex <= 0) return;
-
-    const state = getScrollState();
-
-    closeInlineInput();
-    song = clone(history[--historyIndex].song);
-    selectedChordId = null;
-    replaceCurrentSong();
-    updateHistoryButtons();
-    renderAll();
-    restoreScrollState(state);
-  }
-
-  function redo() {
-    if (historyIndex >= history.length - 1) return;
-
-    const state = getScrollState();
-
-    closeInlineInput();
-    song = clone(history[++historyIndex].song);
-    selectedChordId = null;
-    replaceCurrentSong();
-    updateHistoryButtons();
-    renderAll();
-    restoreScrollState(state);
+  function updateHistoryButtons() {
+    els.undo.disabled = historyIndex <= 0;
+    els.redo.disabled =
+      historyIndex >= history.length - 1;
   }
 
   function replaceCurrentSong() {
-    if (!song) return;
-
-    const index = store.songs.findIndex(item => item.id === song.id);
-
-    if (index >= 0) {
-      store.songs[index] = song;
+    if (!song) {
+      return;
     }
 
-    persistStore();
+    const index = store.songs.findIndex(
+      item => item.id === song.id
+    );
+
+    if (index >= 0) {
+      store.songs[index] = clone(song);
+    }
+
+    persist();
   }
 
-  function normalizeLines(text) {
-    const previous = song.lines || [];
-
-    return String(text).split('\n').map((lineText, index) => ({
-      id: previous[index]?.id || uid('line'),
-      text: lineText
-    }));
-  }
-
-  function applyLyrics(text) {
-    song.lyrics = String(text);
-    song.lines = normalizeLines(song.lyrics);
-
-    const validIds = new Set(song.lines.map(line => line.id));
-
-    song.chords = song.chords.filter(chord =>
-      validIds.has(chord.lineId)
+  function getChord(id = selectedChordId) {
+    return song?.chords.find(
+      chord => chord.id === id
     );
   }
 
-  function renderLyricWithChars(text) {
-    const fragment = document.createDocumentFragment();
+  function getSelectedChord() {
+    return getChord(selectedChordId);
+  }
 
-    [...text].forEach((char, index) => {
+  function renderChars(text) {
+    const fragment =
+      document.createDocumentFragment();
+
+    [...text].forEach((character, index) => {
       const span = document.createElement('span');
 
       span.className = 'lyric-char';
       span.dataset.index = index;
-      span.textContent = char === ' ' ? '\u00a0' : char;
+      span.textContent =
+        character === ' '
+          ? '\u00a0'
+          : character;
 
       fragment.appendChild(span);
     });
@@ -399,167 +373,270 @@
   }
 
   function getCharX(row, index) {
-    const chars = row.querySelectorAll('.lyric-char');
+    const chars = row.querySelectorAll(
+      '.lyric-char'
+    );
 
-    if (!chars.length) return 0;
+    if (!chars.length) {
+      return 0;
+    }
 
     const rowRect = row.getBoundingClientRect();
 
     if (index >= chars.length) {
-      return chars[chars.length - 1].getBoundingClientRect().right -
-        rowRect.left;
+      return (
+        chars[chars.length - 1]
+          .getBoundingClientRect()
+          .right - rowRect.left
+      );
     }
 
-    return chars[index].getBoundingClientRect().left - rowRect.left;
+    return (
+      chars[index].getBoundingClientRect().left -
+      rowRect.left
+    );
   }
 
   function getCharIndexAtX(row, clientX) {
     const rowRect = row.getBoundingClientRect();
-    const chars = [...row.querySelectorAll('.lyric-char')];
-    const x = clientX - rowRect.left;
+    const chars = [
+      ...row.querySelectorAll('.lyric-char')
+    ];
 
-    const index = chars.findIndex(char => {
-      const rect = char.getBoundingClientRect();
-      return x < rect.left - rowRect.left + rect.width / 2;
+    if (!chars.length) {
+      return 0;
+    }
+
+    const index = chars.findIndex(character => {
+      const rect =
+        character.getBoundingClientRect();
+
+      return clientX <
+        rect.left + rect.width / 2;
     });
 
     return index < 0 ? chars.length : index;
   }
 
-  function getChordById(id) {
-    return song?.chords.find(chord => chord.id === id);
-  }
-
-  function getSelectedChord() {
-    return getChordById(selectedChordId);
-  }
-
-  function renderLine(line, editable) {
+  function createRow(line, editable) {
     const row = document.createElement('div');
 
-    row.className = editable ? 'score-line' : 'preview-line';
+    row.className = editable
+      ? 'score-line'
+      : 'preview-line';
+
     row.dataset.lineId = line.id;
 
     const lyric = document.createElement('span');
     lyric.className = 'lyric-text';
-    lyric.appendChild(renderLyricWithChars(line.text));
+    lyric.appendChild(renderChars(line.text));
+
     row.appendChild(lyric);
 
     if (editable) {
       row.addEventListener('pointerup', event => {
-        if (dragState || event.target.closest('.chord, .inline-chord-input')) {
+        if (
+          dragState ||
+          event.target.closest(
+            '.chord, .inline-chord-input'
+          )
+        ) {
           return;
         }
 
-        const rect = row.getBoundingClientRect();
-        const chars = [...row.querySelectorAll('.lyric-char')];
-        const x = event.clientX - rect.left;
+        const rowRect =
+          row.getBoundingClientRect();
 
-        let index = chars.findIndex(char => {
-          const charRect = char.getBoundingClientRect();
-          return x < charRect.left - rect.left + charRect.width / 2;
-        });
+        const clickX =
+          event.clientX - rowRect.left;
 
-        if (index < 0) index = chars.length;
+        const charIndex =
+          getCharIndexAtX(row, event.clientX);
+
+        if (selectedPaletteChord) {
+          addChord(
+            line.id,
+            charIndex,
+            clickX,
+            selectedPaletteChord
+          );
+
+          selectedPaletteChord = null;
+          renderPalette();
+          closeMobilePalette();
+          return;
+        }
 
         clearSelectedChord();
-        showInlineInput(row, line.id, index, x);
+
+        showInlineInput(
+          row,
+          line.id,
+          charIndex,
+          clickX
+        );
       });
     }
 
     return row;
   }
 
-  function renderChordsOnRow(row, lineId, editable) {
+  function addChord(
+    lineId,
+    charIndex,
+    clickX,
+    name
+  ) {
+    const row = [
+      ...els.score.querySelectorAll('.score-line')
+    ].find(
+      item => item.dataset.lineId === lineId
+    );
+
+    if (!row) {
+      return;
+    }
+
+    const baseX = getCharX(row, charIndex);
+
+    const chord = {
+      id: uid('chord'),
+      name: String(name).trim(),
+      lineId,
+      charIndex,
+      offset: clickX - baseX
+    };
+
+    if (!chord.name) {
+      return;
+    }
+
+    song.chords.push(chord);
+    selectedChordId = chord.id;
+
+    commit('コード追加');
+    renderAll();
+  }
+
+  function renderChordsOnRow(
+    row,
+    lineId,
+    editable
+  ) {
     song.chords
       .filter(chord => chord.lineId === lineId)
       .forEach(chord => {
-        const element = document.createElement('button');
+        const button =
+          document.createElement('button');
 
-        element.type = 'button';
-        element.className =
-          `chord${chord.id === selectedChordId ? ' selected' : ''}`;
-        element.textContent = chord.name;
-        element.dataset.chordId = chord.id;
+        button.type = 'button';
+        button.className =
+          'chord' +
+          (
+            chord.id === selectedChordId
+              ? ' selected'
+              : ''
+          );
 
-        const base = getCharX(row, chord.charIndex);
-        element.style.left = `${base + chord.offset}px`;
+        button.textContent = chord.name;
+        button.dataset.chordId = chord.id;
+
+        const baseX = getCharX(
+          row,
+          chord.charIndex
+        );
+
+        button.style.left =
+          `${baseX + chord.offset}px`;
 
         if (!editable) {
-          element.disabled = true;
-          element.style.pointerEvents = 'none';
-          row.appendChild(element);
+          button.disabled = true;
+          button.style.pointerEvents = 'none';
+          row.appendChild(button);
           return;
         }
 
-        element.addEventListener('pointerdown', event => {
-  　　　　if (event.pointerType === 'touch') {
-  　　　　  event.preventDefault();
- 　　　　 }
+        button.addEventListener(
+          'pointerdown',
+          event => {
+            if (event.pointerType === 'touch') {
+              event.preventDefault();
+            }
 
-  　　　　startLongPress(event);
-  　　　　startDrag(event);
-　　　　}, {
-  　　　　passive: false
-　　　　});
+            startLongPress(event);
+            startDrag(event);
+          },
+          { passive: false }
+        );
 
-        element.addEventListener('pointermove', cancelLongPress);
+        button.addEventListener(
+          'pointermove',
+          event => {
+            if (
+              dragState &&
+              event.pointerId === dragState.pointerId
+            ) {
+              cancelLongPress();
+            }
+          },
+          { passive: false }
+        );
 
-        element.addEventListener('pointerup', event => {
-          cancelLongPress();
+        button.addEventListener(
+          'pointerup',
+          event => {
+            cancelLongPress();
 
-          if (longPressTriggered) {
+            if (longPressTriggered) {
+              event.preventDefault();
+              event.stopPropagation();
+              longPressTriggered = false;
+            }
+          }
+        );
+
+        button.addEventListener(
+          'pointercancel',
+          () => {
+            cancelLongPress();
+          }
+        );
+
+        button.addEventListener(
+          'click',
+          event => {
             event.preventDefault();
             event.stopPropagation();
-            longPressTriggered = false;
-          }
-        });
 
-        element.addEventListener('pointercancel', cancelLongPress);
+            if (longPressTriggered) {
+              longPressTriggered = false;
+              return;
+            }
 
-        element.addEventListener('click', event => {
-          if (longPressTriggered) {
-            event.preventDefault();
-            event.stopPropagation();
-            longPressTriggered = false;
-            return;
-          }
+            if (suppressChordActivation) {
+              suppressChordActivation = false;
+              return;
+            }
 
-          event.preventDefault();
-          event.stopPropagation();
-
-          if (suppressChordActivation) {
-            suppressChordActivation = false;
-            return;
-          }
-
-          const now = Date.now();
-          const isSecondTap =
-            lastTap.id === chord.id &&
-            now - lastTap.time < DOUBLE_TAP_DELAY;
-
-          lastTap = {
-            id: chord.id,
-            time: now
-          };
-
-          if (isSecondTap) {
-            lastTap = { id: null, time: 0 };
-            showExistingChordInput(row, element, chord);
-          } else {
             selectChord(chord.id);
           }
-        });
+        );
 
-        element.addEventListener('dblclick', event => {
-          event.preventDefault();
-          event.stopPropagation();
+        button.addEventListener(
+          'dblclick',
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
 
-          lastTap = { id: null, time: 0 };
-          showExistingChordInput(row, element, chord);
-        });
+            showExistingChordInput(
+              row,
+              button,
+              chord
+            );
+          }
+        );
 
-        row.appendChild(element);
+        row.appendChild(button);
       });
   }
 
@@ -567,7 +644,8 @@
     els.score.replaceChildren();
 
     song.lines.forEach(line => {
-      const row = renderLine(line, true);
+      const row = createRow(line, true);
+
       els.score.appendChild(row);
       renderChordsOnRow(row, line.id, true);
     });
@@ -583,9 +661,11 @@
     artist.className = 'artist';
     artist.textContent = [
       song.artist,
-      song.key ? `Key: ${song.key}` : '',
-      Number(song.capo) ? `Capo: ${song.capo}` : ''
-    ].filter(Boolean).join(' / ');
+      song.key ? `Key: ${song.key}` : 'Key: 未設定',
+      `Capo: ${song.capo}`
+    ]
+      .filter(Boolean)
+      .join(' / ');
 
     const score = document.createElement('div');
     score.className = 'score';
@@ -593,36 +673,57 @@
     els.previewSheet.append(title, artist, score);
 
     song.lines.forEach(line => {
-      const row = renderLine(line, false);
+      const row = createRow(line, false);
+
       score.appendChild(row);
       renderChordsOnRow(row, line.id, false);
     });
   }
 
-  function fontCss(value) {
-    return /[\s"'();{}]/.test(value)
-      ? `"${value.replace(/"/g, '')}"`
-      : value;
-  }
-
-  function renderFontSettings() {
-    els.lyricFontSize.value = song.lyricFontSize;
-    els.chordFontSize.value = song.chordFontSize;
-    els.lyricFontSizeValue.textContent = song.lyricFontSize;
-    els.chordFontSizeValue.textContent = song.chordFontSize;
-    els.lyricFontFamily.value = song.lyricFontFamily;
-    els.chordFontFamily.value = song.chordFontFamily;
-
+  function renderFonts() {
     const root = document.documentElement;
 
-    root.style.setProperty('--lyric-font-size', `${song.lyricFontSize}px`);
-    root.style.setProperty('--chord-font-size', `${song.chordFontSize}px`);
-    root.style.setProperty('--lyric-font-family', fontCss(song.lyricFontFamily));
-    root.style.setProperty('--chord-font-family', fontCss(song.chordFontFamily));
+    root.style.setProperty(
+      '--lyric-font-size',
+      `${song.lyricFontSize}px`
+    );
+
+    root.style.setProperty(
+      '--chord-font-size',
+      `${song.chordFontSize}px`
+    );
+
+    root.style.setProperty(
+      '--lyric-font-family',
+      song.lyricFontFamily
+    );
+
+    root.style.setProperty(
+      '--chord-font-family',
+      song.chordFontFamily
+    );
+
+    els.lyricSize.value = song.lyricFontSize;
+    els.chordSize.value = song.chordFontSize;
+    els.lyricSizeValue.textContent = song.lyricFontSize;
+    els.chordSizeValue.textContent = song.chordFontSize;
+    els.lyricFamily.value = song.lyricFontFamily;
+    els.chordFamily.value = song.chordFontFamily;
+  }
+
+  function renderTransposeValue() {
+    const value = Number(song?.transpose) || 0;
+
+    els.transposeValue.textContent =
+      value > 0
+        ? `+${value}`
+        : String(value);
   }
 
   function renderAll() {
-    if (!song) return;
+    if (!song) {
+      return;
+    }
 
     normalizeSong(song);
 
@@ -635,21 +736,39 @@
       els.lyrics.value = song.lyrics;
     }
 
-    renderFontSettings();
+    renderFonts();
     renderEditor();
     renderPreview();
+    renderPalette();
+    renderTransposeValue();
     updateMode();
     updateMobileControls();
   }
 
   function updateMode() {
-    els.lyricsEditor.classList.toggle('hidden', mode !== 'lyrics');
-    els.chordsEditor.classList.toggle('hidden', mode !== 'chords');
-    els.preview.classList.toggle('hidden', mode !== 'preview');
+    els.lyricsEditor.classList.toggle(
+      'hidden',
+      mode !== 'lyrics'
+    );
 
-    Object.entries(els.modes).forEach(([name, button]) => {
-      button.classList.toggle('active', name === mode);
-    });
+    els.chordsEditor.classList.toggle(
+      'hidden',
+      mode !== 'chords'
+    );
+
+    els.preview.classList.toggle(
+      'hidden',
+      mode !== 'preview'
+    );
+
+    Object.entries(els.modes).forEach(
+      ([name, button]) => {
+        button.classList.toggle(
+          'active',
+          name === mode
+        );
+      }
+    );
 
     updateMobileControls();
   }
@@ -657,10 +776,21 @@
   function switchMode(nextMode) {
     closeInlineInput();
     mode = nextMode;
+
+    if (mode !== 'chords') {
+      closeMobilePalette();
+    }
+
     updateMode();
 
-    if (mode === 'chords') renderEditor();
-    if (mode === 'preview') renderPreview();
+    if (mode === 'chords') {
+      renderEditor();
+      updateMobileControls();
+    }
+
+    if (mode === 'preview') {
+      renderPreview();
+    }
   }
 
   function closeInlineInput() {
@@ -668,7 +798,12 @@
     inlineInput = null;
   }
 
-  function showInlineInput(row, lineId, charIndex, x) {
+  function showInlineInput(
+    row,
+    lineId,
+    charIndex,
+    clickX
+  ) {
     closeInlineInput();
 
     const input = document.createElement('input');
@@ -678,37 +813,42 @@
     input.type = 'text';
     input.placeholder = 'コード';
     input.autocomplete = 'off';
-    input.style.left = `${x}px`;
+    input.style.left = `${clickX}px`;
 
     row.appendChild(input);
     input.focus();
 
-    let done = false;
+    let finished = false;
     let cancelled = false;
 
     const finish = () => {
-      if (done || cancelled) return;
+      if (finished || cancelled) {
+        return;
+      }
 
-      done = true;
+      finished = true;
+
       const name = input.value.trim();
 
       if (name) {
-        const base = getCharX(row, charIndex);
+        const baseX = getCharX(row, charIndex);
 
-        song.chords.push({
+        const chord = {
           id: uid('chord'),
           name,
           lineId,
           charIndex,
-          offset: x - base
-        });
+          offset: clickX - baseX
+        };
+
+        song.chords.push(chord);
+        selectedChordId = chord.id;
 
         commit('コード追加');
       }
 
       closeInlineInput();
-      selectedChordId = null;
-      renderAllPreservingScroll();
+      renderAll();
     };
 
     input.addEventListener('keydown', event => {
@@ -720,18 +860,25 @@
       if (event.key === 'Escape') {
         event.preventDefault();
         cancelled = true;
-        done = true;
+        finished = true;
         closeInlineInput();
       }
     });
 
     input.addEventListener('blur', () => {
-      if (!cancelled) finish();
+      if (!cancelled) {
+        finish();
+      }
     });
   }
 
-  function showExistingChordInput(row, chordElement, chord) {
+  function showExistingChordInput(
+    row,
+    chordElement,
+    chord
+  ) {
     closeInlineInput();
+
     selectedChordId = chord.id;
     updateMobileControls();
 
@@ -744,23 +891,28 @@
     input.autocomplete = 'off';
 
     const rowRect = row.getBoundingClientRect();
-    const chordRect = chordElement.getBoundingClientRect();
+    const chordRect =
+      chordElement.getBoundingClientRect();
 
-    input.style.left = `${
-      chordRect.left + chordRect.width / 2 - rowRect.left
-    }px`;
+    input.style.left =
+      `${chordRect.left +
+        chordRect.width / 2 -
+        rowRect.left}px`;
 
     row.appendChild(input);
     input.focus();
     input.select();
 
-    let done = false;
+    let finished = false;
     let cancelled = false;
 
     const finish = () => {
-      if (done || cancelled) return;
+      if (finished || cancelled) {
+        return;
+      }
 
-      done = true;
+      finished = true;
+
       const name = input.value.trim();
 
       if (name && name !== chord.name) {
@@ -770,7 +922,7 @@
 
       closeInlineInput();
       selectedChordId = chord.id;
-      renderAllPreservingScroll();
+      renderAll();
     };
 
     input.addEventListener('keydown', event => {
@@ -782,24 +934,36 @@
       if (event.key === 'Escape') {
         event.preventDefault();
         cancelled = true;
-        done = true;
+        finished = true;
         closeInlineInput();
       }
     });
 
-        input.addEventListener('blur', () => {
-      if (!cancelled) finish();
+    input.addEventListener('blur', () => {
+      if (!cancelled) {
+        finish();
+      }
     });
   }
 
   function startLongPress(event) {
-    if (event.pointerType === 'mouse') return;
+    if (
+      event.pointerType === 'mouse' ||
+      dragState
+    ) {
+      return;
+    }
 
     const element = event.currentTarget;
-    const chord = getChordById(element.dataset.chordId);
+    const chord = getChord(
+      element.dataset.chordId
+    );
 
-    if (!chord) return;
+    if (!chord) {
+      return;
+    }
 
+    cancelLongPress();
     longPressTriggered = false;
 
     longPressTimer = setTimeout(async () => {
@@ -808,19 +972,17 @@
       updateMobileControls();
 
       try {
-        await navigator.clipboard.writeText(chord.name);
+        await navigator.clipboard.writeText(
+          chord.name
+        );
 
-        if (els.status) {
-          els.status.textContent =
-            `コード「${chord.name}」をコピーしました`;
-        }
+        els.status.textContent =
+          `コード「${chord.name}」をコピーしました`;
       } catch {
-        if (els.status) {
-          els.status.textContent =
-            'コピーできませんでした。HTTPS環境でお試しください';
-        }
+        els.status.textContent =
+          'コピーできませんでした';
       }
-    }, 600);
+    }, LONG_PRESS);
   }
 
   function cancelLongPress() {
@@ -832,12 +994,18 @@
     closeInlineInput();
     selectedChordId = id;
 
-    els.score.querySelectorAll('.chord.selected').forEach(element => {
-      element.classList.remove('selected');
-    });
+    els.score
+      .querySelectorAll('.chord.selected')
+      .forEach(element => {
+        element.classList.remove('selected');
+      });
 
-    const selected = [...els.score.querySelectorAll('.chord')]
-      .find(element => element.dataset.chordId === id);
+    const selected = [
+      ...els.score.querySelectorAll('.chord')
+    ].find(
+      element =>
+        element.dataset.chordId === id
+    );
 
     selected?.classList.add('selected');
     updateMobileControls();
@@ -846,130 +1014,252 @@
   function clearSelectedChord() {
     selectedChordId = null;
 
-    els.score.querySelectorAll('.chord.selected').forEach(element => {
-      element.classList.remove('selected');
-    });
+    els.score
+      .querySelectorAll('.chord.selected')
+      .forEach(element => {
+        element.classList.remove('selected');
+      });
 
     updateMobileControls();
   }
 
   function updateMobileControls() {
     const chord = getSelectedChord();
-    const visible = mode === 'chords' && Boolean(chord);
+    const visible = mode === 'chords';
 
-    els.mobileControls.classList.toggle('hidden', !visible);
+    els.mobile.classList.toggle(
+      'hidden',
+      !visible
+    );
+
+    els.delete.disabled = !chord;
+    els.duplicate.disabled = !chord;
+    els.left.disabled = !chord;
+    els.right.disabled = !chord;
+    els.copy.disabled = !chord;
+    els.paste.disabled = !chord;
+    els.selectedName.disabled = !chord;
 
     if (chord) {
-      els.selectedChordName.value = chord.name;
+      els.selectedName.value = chord.name;
+    } else {
+      els.selectedName.value = '';
     }
   }
-  
+
+  function openMobilePalette() {
+    if (mode !== 'chords') {
+      switchMode('chords');
+    }
+
+    els.chordTools.classList.add(
+      'mobile-palette-open'
+    );
+
+    els.paletteBackdrop.classList.remove(
+      'hidden'
+    );
+
+    els.status.textContent =
+      'パレットからコードを選択してください';
+  }
+
+  function closeMobilePalette() {
+    els.chordTools.classList.remove(
+      'mobile-palette-open'
+    );
+
+    els.paletteBackdrop.classList.add(
+      'hidden'
+    );
+  }
+
   async function copySelectedChord() {
     const chord = getSelectedChord();
-    if (!chord) return;
+
+    if (!chord) {
+      return;
+    }
 
     try {
-      await navigator.clipboard.writeText(chord.name);
+      await navigator.clipboard.writeText(
+        chord.name
+      );
 
-      if (els.status) {
-        els.status.textContent = `コード「${chord.name}」をコピーしました`;
-      }
+      els.status.textContent =
+        `コード「${chord.name}」をコピーしました`;
     } catch {
-      if (els.status) {
-        els.status.textContent =
-          'コピーできませんでした。HTTPS環境でお試しください';
-      }
+      els.status.textContent =
+        'コピーできませんでした';
     }
   }
 
   async function pasteChord() {
-    if (!song) return;
+    if (!song) {
+      return;
+    }
 
     let name = '';
 
     try {
-      name = (await navigator.clipboard.readText()).trim();
+      name = (
+        await navigator.clipboard.readText()
+      ).trim();
     } catch {
-      if (els.status) {
-        els.status.textContent =
-          '貼り付けできませんでした。ブラウザの許可を確認してください';
-      }
+      els.status.textContent =
+        '貼り付けできませんでした';
       return;
     }
 
-    if (!name) return;
+    if (!name) {
+      return;
+    }
 
     const baseChord = getSelectedChord();
 
-    if (baseChord) {
-      song.chords.push({
-        id: uid('chord'),
-        name,
-        lineId: baseChord.lineId,
-        charIndex: baseChord.charIndex,
-        offset: baseChord.offset
-      });
-
-      commit('コード貼り付け');
-      selectedChordId = song.chords[song.chords.length - 1].id;
-      renderAllPreservingScroll();
+    if (!baseChord) {
+      els.status.textContent =
+        '貼り付ける位置のコードを先に選択してください';
       return;
     }
 
-    if (els.status) {
-      els.status.textContent =
-        '貼り付ける位置のコードを先に選択してください';
-    }
+    const pastedChord = {
+      id: uid('chord'),
+      name,
+      lineId: baseChord.lineId,
+      charIndex: baseChord.charIndex,
+      offset:
+        Number(baseChord.offset || 0) +
+        DUPLICATE_OFFSET
+    };
+
+    song.chords.push(pastedChord);
+    selectedChordId = pastedChord.id;
+
+    commit('コード貼り付け');
+    renderAll();
   }
 
-  function deleteSelected() {
-    const chord = getSelectedChord();
-    if (!chord) return;
+  function duplicateSelectedChord() {
+    const source = getSelectedChord();
 
-    song.chords = song.chords.filter(item => item.id !== chord.id);
+    if (!source) {
+      return;
+    }
+
+    const copied = clone(source);
+
+    copied.id = uid('chord');
+    copied.offset =
+      Number(copied.offset || 0) +
+      DUPLICATE_OFFSET;
+
+    while (
+      song.chords.some(chord =>
+        chord.id !== copied.id &&
+        chord.lineId === copied.lineId &&
+        chord.charIndex === copied.charIndex &&
+        Math.abs(
+          Number(chord.offset || 0) -
+          Number(copied.offset || 0)
+        ) < 1
+      )
+    ) {
+      copied.offset += DUPLICATE_OFFSET;
+    }
+
+    song.chords.push(copied);
+    selectedChordId = copied.id;
+
+    commit('コード複製');
+    renderAll();
+  }
+
+  function deleteSelectedChord() {
+    const chord = getSelectedChord();
+
+    if (!chord) {
+      return;
+    }
+
+    song.chords = song.chords.filter(
+      item => item.id !== chord.id
+    );
+
     selectedChordId = null;
 
     commit('コード削除');
-    renderAllPreservingScroll();
+    renderAll();
   }
 
   function nudge(amount) {
     const chord = getSelectedChord();
-    if (!chord) return;
 
-    chord.offset = Number(chord.offset || 0) + amount;
+    if (!chord) {
+      return;
+    }
+
+    chord.offset =
+      Number(chord.offset || 0) + amount;
+
     commit('コード位置調整');
-    renderAllPreservingScroll();
+    renderAll();
   }
 
   function getTargetRow(clientY) {
-    const rows = [...els.score.querySelectorAll('.score-line')];
-    if (!rows.length) return null;
+    const rows = [
+      ...els.score.querySelectorAll('.score-line')
+    ];
+
+    if (!rows.length) {
+      return null;
+    }
 
     return rows.reduce((nearest, row) => {
       const rect = row.getBoundingClientRect();
-      const nearestRect = nearest.getBoundingClientRect();
+      const nearestRect =
+        nearest.getBoundingClientRect();
 
-      return Math.abs(clientY - (rect.top + rect.height / 2)) <
-        Math.abs(clientY - (nearestRect.top + nearestRect.height / 2))
+      const distance =
+        Math.abs(
+          clientY -
+          (rect.top + rect.height / 2)
+        );
+
+      const nearestDistance =
+        Math.abs(
+          clientY -
+          (nearestRect.top +
+            nearestRect.height / 2)
+        );
+
+      return distance < nearestDistance
         ? row
         : nearest;
     });
   }
 
   function startDrag(event) {
-    if (mode !== 'chords') return;
+    if (mode !== 'chords') {
+      return;
+    }
 
     event.preventDefault();
     event.stopPropagation();
 
     const element = event.currentTarget;
-    const chord = getChordById(element.dataset.chordId);
-    const row = element.closest('.score-line');
+    const chord = getChord(
+      element.dataset.chordId
+    );
+    const row =
+      element.closest('.score-line');
 
-    if (!chord || !row) return;
+    if (!chord || !row) {
+      return;
+    }
 
-    const rect = element.getBoundingClientRect();
+    const rect =
+      element.getBoundingClientRect();
 
     selectedChordId = chord.id;
 
@@ -978,47 +1268,93 @@
       pointerId: event.pointerId,
       element,
       currentRow: row,
-      grabDelta: event.clientX - (rect.left + rect.width / 2),
+      grabDelta:
+        event.clientX -
+        (rect.left + rect.width / 2),
       originalLineId: chord.lineId,
       originalCharIndex: chord.charIndex,
-      originalOffset: Number(chord.offset || 0),
+      originalOffset:
+        Number(chord.offset || 0),
       moved: false
     };
 
-    element.setPointerCapture?.(event.pointerId);
+    cancelLongPress();
 
-    document.addEventListener('pointermove', moveDrag, {
-      passive: false
-    });
+    element.setPointerCapture?.(
+      event.pointerId
+    );
 
-    document.addEventListener('pointerup', endDrag);
-    document.addEventListener('pointercancel', endDrag);
+    document.addEventListener(
+      'pointermove',
+      moveDrag,
+      { passive: false }
+    );
+
+    document.addEventListener(
+      'pointerup',
+      endDrag
+    );
+
+    document.addEventListener(
+      'pointercancel',
+      endDrag
+    );
   }
 
   function moveDrag(event) {
-    if (!dragState || event.pointerId !== dragState.pointerId) return;
+    if (
+      !dragState ||
+      event.pointerId !== dragState.pointerId
+    ) {
+      return;
+    }
 
     event.preventDefault();
+    cancelLongPress();
 
-    const chord = getChordById(dragState.id);
-    const targetRow = getTargetRow(event.clientY);
+    const chord =
+      getChord(dragState.id);
 
-    if (!chord || !targetRow) return;
+    const targetRow =
+      getTargetRow(event.clientY);
 
-    const rowRect = targetRow.getBoundingClientRect();
-    const charIndex = getCharIndexAtX(targetRow, event.clientX);
-    const base = getCharX(targetRow, charIndex);
+    if (!chord || !targetRow) {
+      return;
+    }
+
+    const rowRect =
+      targetRow.getBoundingClientRect();
+
+    const charIndex =
+      getCharIndexAtX(
+        targetRow,
+        event.clientX
+      );
+
+    const baseX =
+      getCharX(
+        targetRow,
+        charIndex
+      );
 
     const centerX =
-      event.clientX - rowRect.left - dragState.grabDelta;
+      event.clientX -
+      rowRect.left -
+      dragState.grabDelta;
 
-    const offset = centerX - base;
-    const lineId = targetRow.dataset.lineId;
+    const offset =
+      centerX - baseX;
+
+    const lineId =
+      targetRow.dataset.lineId;
 
     if (
       chord.lineId !== lineId ||
       chord.charIndex !== charIndex ||
-      Math.abs(offset - dragState.originalOffset) >= DRAG_THRESHOLD
+      Math.abs(
+        offset -
+        dragState.originalOffset
+      ) >= DRAG_THRESHOLD
     ) {
       dragState.moved = true;
     }
@@ -1027,35 +1363,59 @@
     chord.charIndex = charIndex;
     chord.offset = offset;
 
-    if (dragState.currentRow !== targetRow) {
-      targetRow.appendChild(dragState.element);
+    if (
+      dragState.currentRow !== targetRow
+    ) {
+      targetRow.appendChild(
+        dragState.element
+      );
+
       dragState.currentRow = targetRow;
     }
 
-    dragState.element.style.left = `${base + offset}px`;
+    dragState.element.style.left =
+      `${baseX + offset}px`;
   }
 
   function endDrag(event) {
     if (
       !dragState ||
-      (event && event.pointerId !== dragState.pointerId)
+      (
+        event &&
+        event.pointerId !==
+          dragState.pointerId
+      )
     ) {
       return;
     }
 
     const finished = dragState;
 
-    document.removeEventListener('pointermove', moveDrag);
-    document.removeEventListener('pointerup', endDrag);
-    document.removeEventListener('pointercancel', endDrag);
+    cancelLongPress();
+
+    document.removeEventListener(
+      'pointermove',
+      moveDrag
+    );
+
+    document.removeEventListener(
+      'pointerup',
+      endDrag
+    );
+
+    document.removeEventListener(
+      'pointercancel',
+      endDrag
+    );
 
     dragState = null;
     selectedChordId = finished.id;
 
     if (finished.moved) {
       suppressChordActivation = true;
+
       commit('コード移動');
-      renderAllPreservingScroll();
+      renderAll();
 
       setTimeout(() => {
         suppressChordActivation = false;
@@ -1065,177 +1425,342 @@
     }
   }
 
+  function applyLyrics(text) {
+    const previousLines =
+      song.lines || [];
+
+    song.lyrics = String(text);
+
+    song.lines =
+      song.lyrics.split('\n').map(
+        (lineText, index) => ({
+          id:
+            previousLines[index]?.id ||
+            uid('line'),
+          text: lineText
+        })
+      );
+
+    const validLineIds =
+      new Set(
+        song.lines.map(line => line.id)
+      );
+
+    song.chords =
+      song.chords.filter(chord =>
+        validLineIds.has(chord.lineId)
+      );
+  }
+
   function updateMeta() {
-    const before = JSON.stringify({
-      title: song.title,
-      artist: song.artist,
-      key: song.key,
-      capo: song.capo
-    });
+    const before =
+      JSON.stringify({
+        title: song.title,
+        artist: song.artist,
+        key: song.key,
+        capo: song.capo
+      });
 
     song.title = els.title.value;
     song.artist = els.artist.value;
     song.key = els.key.value;
-    song.capo = clamp(els.capo.value, 0, 12, 0);
+    song.capo = clamp(
+      els.capo.value,
+      0,
+      12,
+      0
+    );
 
-    const after = JSON.stringify({
-      title: song.title,
-      artist: song.artist,
-      key: song.key,
-      capo: song.capo
-    });
+    const after =
+      JSON.stringify({
+        title: song.title,
+        artist: song.artist,
+        key: song.key,
+        capo: song.capo
+      });
 
-    if (before === after) return;
+    if (before === after) {
+      return;
+    }
 
     commit('曲情報を編集');
     renderHome();
   }
 
   function updateFontSize(type, value) {
-    const fallback = type === 'lyricFontSize'
-      ? DEFAULT_LYRIC_FONT_SIZE
-      : DEFAULT_CHORD_FONT_SIZE;
+    const fallback =
+      type === 'lyricFontSize'
+        ? DEFAULTS.lyricFontSize
+        : DEFAULTS.chordFontSize;
 
     const size = clamp(
       value,
-      MIN_FONT_SIZE,
-      MAX_FONT_SIZE,
+      12,
+      32,
       fallback
     );
 
-    if (song[type] === size) return;
+    if (song[type] === size) {
+      return;
+    }
 
     song[type] = size;
-    commit(type === 'lyricFontSize'
-      ? '歌詞サイズ変更'
-      : 'コードサイズ変更');
+
+    commit(
+      type === 'lyricFontSize'
+        ? '歌詞サイズ変更'
+        : 'コードサイズ変更'
+    );
 
     renderAll();
   }
 
   function updateFontFamily(type, value) {
-    const fallback = type === 'lyricFontFamily'
-      ? DEFAULT_LYRIC_FONT_FAMILY
-      : DEFAULT_CHORD_FONT_FAMILY;
+    const fallback =
+      type === 'lyricFontFamily'
+        ? DEFAULTS.lyricFontFamily
+        : DEFAULTS.chordFontFamily;
 
-    const family = normalizeFontFamily(value, fallback);
+    const family =
+      typeof value === 'string' &&
+      value.trim()
+        ? value.trim()
+        : fallback;
 
-    if (song[type] === family) return;
+    if (song[type] === family) {
+      return;
+    }
 
     song[type] = family;
-    commit(type === 'lyricFontFamily'
-      ? '歌詞フォント変更'
-      : 'コードフォント変更');
+
+    commit(
+      type === 'lyricFontFamily'
+        ? '歌詞フォント変更'
+        : 'コードフォント変更'
+    );
 
     renderAll();
   }
 
   function resetFontSizes() {
     if (
-      song.lyricFontSize === DEFAULT_LYRIC_FONT_SIZE &&
-      song.chordFontSize === DEFAULT_CHORD_FONT_SIZE
+      song.lyricFontSize ===
+        DEFAULTS.lyricFontSize &&
+      song.chordFontSize ===
+        DEFAULTS.chordFontSize
     ) {
       return;
     }
 
-    song.lyricFontSize = DEFAULT_LYRIC_FONT_SIZE;
-    song.chordFontSize = DEFAULT_CHORD_FONT_SIZE;
+    song.lyricFontSize =
+      DEFAULTS.lyricFontSize;
+
+    song.chordFontSize =
+      DEFAULTS.chordFontSize;
 
     commit('文字サイズを標準に戻す');
     renderAll();
   }
 
-  function openEditor(id) {
-    const target = store.songs.find(item => item.id === id);
-    if (!target) return;
+  function parseChordName(name) {
+    const match = String(name)
+      .trim()
+      .match(
+        /^([A-Ga-g])([#♯b♭]?)(.*?)(?:\/([A-Ga-g])([#♯b♭]?))?$/
+      );
 
-    closeInlineInput();
+    if (!match) {
+      return null;
+    }
 
-    song = normalizeSong(target);
-    store.currentSongId = song.id;
-    persistStore();
+    const normalizeAccidental = value =>
+      String(value || '')
+        .replace('♯', '#')
+        .replace('♭', 'b');
 
-    selectedChordId = null;
-    mode = 'lyrics';
-    resetHistory();
+    const root =
+      match[1].toUpperCase() +
+      normalizeAccidental(match[2]);
 
-    els.home.classList.add('hidden');
-    els.editor.classList.remove('hidden');
+    const bass = match[4]
+      ? match[4].toUpperCase() +
+        normalizeAccidental(match[5])
+      : null;
+
+    if (!getNoteIndex(root)) {
+      return null;
+    }
+
+    if (bass && !getNoteIndex(bass)) {
+      return null;
+    }
+
+    return {
+      root,
+      suffix: match[3] || '',
+      bass
+    };
+  }
+
+  const SHARP_NOTES = [
+    'C', 'C#', 'D', 'D#', 'E', 'F',
+    'F#', 'G', 'G#', 'A', 'A#', 'B'
+  ];
+
+  const FLAT_NOTES = {
+    'C#': 'Db',
+    'D#': 'Eb',
+    'F#': 'Gb',
+    'G#': 'Ab',
+    'A#': 'Bb'
+  };
+
+  function getNoteIndex(note) {
+    const normalized = String(note)
+      .replace('b', '#');
+
+    const index =
+      SHARP_NOTES.indexOf(normalized);
+
+    return index >= 0 ? index : null;
+  }
+
+  function transposeNote(note, amount) {
+    const index = getNoteIndex(note);
+
+    if (index === null) {
+      return note;
+    }
+
+    const result =
+      SHARP_NOTES[
+        (index + amount + 120) % 12
+      ];
+
+    return note.includes('b')
+      ? FLAT_NOTES[result] || result
+      : result;
+  }
+
+  function transposeChordName(name, amount) {
+    const parsed =
+      parseChordName(name);
+
+    if (!parsed) {
+      return name;
+    }
+
+    const root =
+      transposeNote(
+        parsed.root,
+        amount
+      );
+
+    const bass = parsed.bass
+      ? `/${transposeNote(
+          parsed.bass,
+          amount
+        )}`
+      : '';
+
+    return `${root}${parsed.suffix}${bass}`;
+  }
+
+  function transposeAll(amount) {
+    if (!song || amount === 0) {
+      return;
+    }
+
+    const current =
+      Number(song.transpose) || 0;
+
+    const next =
+      Math.max(
+        -12,
+        Math.min(12, current + amount)
+      );
+
+    const delta = next - current;
+
+    if (delta === 0) {
+      return;
+    }
+
+    song.chords.forEach(chord => {
+      chord.name =
+        transposeChordName(
+          chord.name,
+          delta
+        );
+    });
+
+    song.transpose = next;
+
+    commit(
+      `一括移調 ${
+        delta > 0 ? '+' : ''
+      }${delta}`
+    );
 
     renderAll();
   }
 
-  function showHome() {
-    closeInlineInput();
+  function resetTranspose() {
+    const current =
+      Number(song?.transpose) || 0;
 
-    if (dragState) endDrag();
-
-    persistStore();
-
-    els.editor.classList.add('hidden');
-    els.home.classList.remove('hidden');
-
-    renderHome();
-  }
-
-  function duplicateSong(id) {
-    const source = store.songs.find(item => item.id === id);
-    if (!source) return;
-
-    const copied = clone(source);
-    copied.id = uid('song');
-    copied.title = `${source.title || '無題'} のコピー`;
-    copied.updatedAt = Date.now();
-
-    const lineIdMap = new Map();
-
-    copied.lines.forEach(line => {
-      const oldId = line.id;
-      line.id = uid('line');
-      lineIdMap.set(oldId, line.id);
-    });
-
-    copied.chords.forEach(chord => {
-      chord.id = uid('chord');
-      chord.lineId = lineIdMap.get(chord.lineId);
-    });
-
-    store.songs.push(normalizeSong(copied));
-    persistStore();
-    renderHome();
-  }
-
-  function deleteSong(id) {
-    const target = store.songs.find(item => item.id === id);
-
-    if (
-      !target ||
-      !window.confirm(`「${target.title || '無題'}」を削除しますか？`)
-    ) {
+    if (!song || current === 0) {
       return;
     }
 
-    store.songs = store.songs.filter(item => item.id !== id);
+    transposeAll(-current);
+  }
 
-    if (store.currentSongId === id) {
-      store.currentSongId = null;
-    }
+  function renderPalette() {
+    const activeTab =
+      els.paletteTabs.find(button =>
+        button.classList.contains('active')
+      );
 
-    if (song?.id === id) {
-      song = null;
-      els.editor.classList.add('hidden');
-      els.home.classList.remove('hidden');
-    }
+    const category =
+      activeTab?.dataset.palette ||
+      'basic';
 
-    persistStore();
-    renderHome();
+    els.palette.replaceChildren();
+
+    (palettes[category] || []).forEach(name => {
+      const button =
+        document.createElement('button');
+
+      button.type = 'button';
+      button.textContent = name;
+      button.className =
+        selectedPaletteChord === name
+          ? 'selected'
+          : '';
+
+      button.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        selectedPaletteChord = name;
+        renderPalette();
+
+        els.status.textContent =
+          `「${name}」を選択中。歌詞上の位置をクリックしてください`;
+      });
+
+      els.palette.appendChild(button);
+    });
   }
 
   function renderHome() {
     els.songList.replaceChildren();
 
-    els.songCount.textContent = `${store.songs.length}曲`;
-    els.emptyMessage.classList.toggle(
+    els.songCount.textContent =
+      `${store.songs.length}曲`;
+
+    els.empty.classList.toggle(
       'hidden',
       store.songs.length > 0
     );
@@ -1249,37 +1774,211 @@
         const meta = document.createElement('p');
         const updated = document.createElement('p');
         const actions = document.createElement('div');
-        const open = document.createElement('button');
-        const duplicate = document.createElement('button');
-        const remove = document.createElement('button');
+
+        const openButton =
+          document.createElement('button');
+        const duplicateButton =
+          document.createElement('button');
+        const deleteButton =
+          document.createElement('button');
 
         card.className = 'song-card';
-        title.textContent = item.title || '無題';
-        artist.textContent = item.artist || 'アーティスト未設定';
+
+        title.textContent =
+          item.title || '無題';
+
+        artist.textContent =
+          item.artist || 'アーティスト未設定';
 
         meta.textContent = [
           item.key ? `Key: ${item.key}` : '',
-          Number(item.capo) ? `Capo: ${item.capo}` : ''
-        ].filter(Boolean).join(' / ') || '曲情報未設定';
+          Number(item.capo)
+            ? `Capo: ${item.capo}`
+            : ''
+        ]
+          .filter(Boolean)
+          .join(' / ') || '曲情報未設定';
 
         updated.textContent =
-          `更新: ${new Date(item.updatedAt).toLocaleString('ja-JP')}`;
+          `更新: ${new Date(
+            item.updatedAt
+          ).toLocaleString('ja-JP')}`;
 
-        actions.className = 'song-card-actions';
+        actions.className =
+          'song-card-actions';
 
-        open.textContent = '開く';
-        duplicate.textContent = '複製';
-        remove.textContent = '削除';
-        remove.className = 'delete-song';
+        openButton.type = 'button';
+        duplicateButton.type = 'button';
+        deleteButton.type = 'button';
 
-        open.addEventListener('click', () => openEditor(item.id));
-        duplicate.addEventListener('click', () => duplicateSong(item.id));
-        remove.addEventListener('click', () => deleteSong(item.id));
+        openButton.textContent = '開く';
+        duplicateButton.textContent = '複製';
+        deleteButton.textContent = '削除';
+        deleteButton.className = 'delete-song';
 
-        actions.append(open, duplicate, remove);
-        card.append(title, artist, meta, updated, actions);
+        openButton.addEventListener(
+          'click',
+          () => openEditor(item.id)
+        );
+
+        duplicateButton.addEventListener(
+          'click',
+          () => duplicateSong(item.id)
+        );
+
+        deleteButton.addEventListener(
+          'click',
+          () => deleteSong(item.id)
+        );
+
+        actions.append(
+          openButton,
+          duplicateButton,
+          deleteButton
+        );
+
+        card.append(
+          title,
+          artist,
+          meta,
+          updated,
+          actions
+        );
+
         els.songList.appendChild(card);
       });
+  }
+
+  function createSong() {
+    return normalizeSong({
+      id: uid('song'),
+      title: '',
+      artist: '',
+      key: '',
+      capo: 0,
+      transpose: 0,
+      lyrics: '',
+      lines: [
+        {
+          id: uid('line'),
+          text: ''
+        }
+      ],
+      chords: [],
+      ...DEFAULTS,
+      updatedAt: Date.now()
+    });
+  }
+
+  function openEditor(id) {
+    const target =
+      store.songs.find(item => item.id === id);
+
+    if (!target) {
+      return;
+    }
+
+    song = normalizeSong(target);
+    store.currentSongId = song.id;
+    persist();
+
+    selectedChordId = null;
+    selectedPaletteChord = null;
+    mode = 'lyrics';
+
+    closeMobilePalette();
+    resetHistory();
+
+    els.home.classList.add('hidden');
+    els.editor.classList.remove('hidden');
+
+    renderAll();
+  }
+
+  function showHome() {
+    closeInlineInput();
+
+    if (dragState) {
+      endDrag();
+    }
+
+    closeMobilePalette();
+    persist();
+
+    els.editor.classList.add('hidden');
+    els.home.classList.remove('hidden');
+
+    renderHome();
+  }
+
+  function duplicateSong(id) {
+    const source =
+      store.songs.find(item => item.id === id);
+
+    if (!source) {
+      return;
+    }
+
+    const copied = clone(source);
+    const lineIdMap = new Map();
+
+    copied.id = uid('song');
+    copied.title =
+      `${source.title || '無題'} のコピー`;
+    copied.updatedAt = Date.now();
+
+    copied.lines.forEach(line => {
+      const oldId = line.id;
+
+      line.id = uid('line');
+      lineIdMap.set(oldId, line.id);
+    });
+
+    copied.chords.forEach(chord => {
+      chord.id = uid('chord');
+      chord.lineId =
+        lineIdMap.get(chord.lineId);
+    });
+
+    store.songs.push(
+      normalizeSong(copied)
+    );
+
+    persist();
+    renderHome();
+  }
+
+  function deleteSong(id) {
+    const target =
+      store.songs.find(item => item.id === id);
+
+    if (!target) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `「${target.title || '無題'}」を削除しますか？`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    store.songs =
+      store.songs.filter(item => item.id !== id);
+
+    if (store.currentSongId === id) {
+      store.currentSongId = null;
+    }
+
+    if (song?.id === id) {
+      song = null;
+      els.editor.classList.add('hidden');
+      els.home.classList.remove('hidden');
+    }
+
+    persist();
+    renderHome();
   }
 
   els.newSong.addEventListener('click', () => {
@@ -1288,107 +1987,315 @@
     store.songs.push(fresh);
     song = fresh;
     store.currentSongId = fresh.id;
-    persistStore();
+
+    persist();
     openEditor(fresh.id);
   });
 
-  els.homeBtn.addEventListener('click', showHome);
+  els.homeBtn.addEventListener(
+    'click',
+    showHome
+  );
 
   els.lyrics.addEventListener('focus', () => {
     lyricsBeforeEdit = song?.lyrics || '';
   });
 
   els.lyrics.addEventListener('input', () => {
-    if (!song) return;
+    if (!song) {
+      return;
+    }
 
     applyLyrics(els.lyrics.value);
     renderEditor();
-    saveSong();
+    save();
   });
 
   els.lyrics.addEventListener('blur', () => {
-    if (song && lyricsBeforeEdit !== song.lyrics) {
+    if (
+      song &&
+      lyricsBeforeEdit !== song.lyrics
+    ) {
       commit('歌詞を編集');
     }
   });
 
-  [els.title, els.artist, els.key, els.capo].forEach(input => {
-    input.addEventListener('change', updateMeta);
+  [
+    els.title,
+    els.artist,
+    els.key,
+    els.capo
+  ].forEach(input => {
+    input.addEventListener(
+      'change',
+      updateMeta
+    );
   });
 
-  els.lyricFontSize.addEventListener('input', event => {
-    updateFontSize('lyricFontSize', event.target.value);
+  els.lyricSize.addEventListener(
+    'input',
+    event => updateFontSize(
+      'lyricFontSize',
+      event.target.value
+    )
+  );
+
+  els.chordSize.addEventListener(
+    'input',
+    event => updateFontSize(
+      'chordFontSize',
+      event.target.value
+    )
+  );
+
+  els.lyricFamily.addEventListener(
+    'change',
+    event => updateFontFamily(
+      'lyricFontFamily',
+      event.target.value
+    )
+  );
+
+  els.chordFamily.addEventListener(
+    'change',
+    event => updateFontFamily(
+      'chordFontFamily',
+      event.target.value
+    )
+  );
+
+  els.resetSize.addEventListener(
+    'click',
+    resetFontSizes
+  );
+
+  els.copy.addEventListener(
+    'click',
+    copySelectedChord
+  );
+
+  els.paste.addEventListener(
+    'click',
+    pasteChord
+  );
+
+  els.delete.addEventListener(
+    'click',
+    deleteSelectedChord
+  );
+
+  els.duplicate.addEventListener(
+    'click',
+    duplicateSelectedChord
+  );
+
+  els.left.addEventListener(
+    'click',
+    () => nudge(-1)
+  );
+
+  els.right.addEventListener(
+    'click',
+    () => nudge(1)
+  );
+
+  els.selectedName.addEventListener(
+    'change',
+    () => {
+      const chord = getSelectedChord();
+      const name =
+        els.selectedName.value.trim();
+
+      if (
+        !chord ||
+        !name ||
+        name === chord.name
+      ) {
+        return;
+      }
+
+      chord.name = name;
+      commit('コード名変更');
+      renderAll();
+    }
+  );
+
+  els.addChord.addEventListener(
+    'click',
+    event => {
+      event.preventDefault();
+      event.stopPropagation();
+      openMobilePalette();
+    }
+  );
+
+  els.closePalette?.addEventListener(
+    'click',
+    closeMobilePalette
+  );
+
+  els.paletteBackdrop?.addEventListener(
+    'click',
+    closeMobilePalette
+  );
+
+  els.paletteTabs.forEach(button => {
+    button.addEventListener(
+      'click',
+      () => {
+        els.paletteTabs.forEach(tab => {
+          tab.classList.remove('active');
+          tab.setAttribute(
+            'aria-selected',
+            'false'
+          );
+        });
+
+        button.classList.add('active');
+        button.setAttribute(
+          'aria-selected',
+          'true'
+        );
+
+        renderPalette();
+      }
+    );
   });
 
-  els.chordFontSize.addEventListener('input', event => {
-    updateFontSize('chordFontSize', event.target.value);
+  els.clearPalette.addEventListener(
+    'click',
+    () => {
+      selectedPaletteChord = null;
+      renderPalette();
+      closeMobilePalette();
+    }
+  );
+
+  els.transposeDown.addEventListener(
+    'click',
+    () => transposeAll(-1)
+  );
+
+  els.transposeUp.addEventListener(
+    'click',
+    () => transposeAll(1)
+  );
+
+  els.resetTranspose.addEventListener(
+    'click',
+    resetTranspose
+  );
+
+  els.modes.lyrics.addEventListener(
+    'click',
+    () => switchMode('lyrics')
+  );
+
+  els.modes.chords.addEventListener(
+    'click',
+    () => switchMode('chords')
+  );
+
+  els.modes.preview.addEventListener(
+    'click',
+    () => switchMode('preview')
+  );
+
+  els.undo.addEventListener('click', () => {
+    if (historyIndex <= 0) {
+      return;
+    }
+
+    song = clone(
+      history[--historyIndex].song
+    );
+
+    normalizeSong(song);
+    selectedChordId =
+      getChord(selectedChordId)
+        ? selectedChordId
+        : null;
+
+    replaceCurrentSong();
+    renderAll();
+    updateHistoryButtons();
   });
 
-  els.lyricFontFamily.addEventListener('change', event => {
-    updateFontFamily('lyricFontFamily', event.target.value);
-  });
+  els.redo.addEventListener('click', () => {
+    if (
+      historyIndex >= history.length - 1
+    ) {
+      return;
+    }
 
-  els.chordFontFamily.addEventListener('change', event => {
-    updateFontFamily('chordFontFamily', event.target.value);
-  });
+    song = clone(
+      history[++historyIndex].song
+    );
 
-  els.resetFontSize.addEventListener('click', resetFontSizes);
-  els.copyChord?.addEventListener('click', copySelectedChord);
-  els.pasteChord?.addEventListener('click', pasteChord);
-  els.modes.lyrics.addEventListener('click', () => switchMode('lyrics'));
-  els.modes.chords.addEventListener('click', () => switchMode('chords'));
-  els.modes.preview.addEventListener('click', () => switchMode('preview'));
-  els.undo.addEventListener('click', undo);
-  els.redo.addEventListener('click', redo);
-  els.deleteChord.addEventListener('click', deleteSelected);
-  els.nudgeLeft.addEventListener('click', () => nudge(-1));
-  els.nudgeRight.addEventListener('click', () => nudge(1));
+    normalizeSong(song);
+    selectedChordId =
+      getChord(selectedChordId)
+        ? selectedChordId
+        : null;
 
-  els.selectedChordName.addEventListener('change', () => {
-    const chord = getSelectedChord();
-    const name = els.selectedChordName.value.trim();
-
-    if (!chord || !name || name === chord.name) return;
-
-    chord.name = name;
-    commit('コード名変更');
-    renderAllPreservingScroll();
+    replaceCurrentSong();
+    renderAll();
+    updateHistoryButtons();
   });
 
   els.print.addEventListener('click', () => {
     closeInlineInput();
+    closeMobilePalette();
     renderPreview();
-    requestAnimationFrame(() => window.print());
+
+    requestAnimationFrame(() => {
+      window.print();
+    });
   });
 
-  document.addEventListener('pointerdown', event => {
-    const chord = event.target.closest('.chord');
-    const controls = event.target.closest('.mobile-controls');
-    const input = event.target.closest('.inline-chord-input');
-
-    if (inlineInput && !input) {
-      setTimeout(() => inlineInput?.blur(), 0);
-    }
-
-    if (selectedChordId && !chord && !controls && !input) {
-      clearSelectedChord();
-    }
-  }, true);
-
   document.addEventListener('keydown', event => {
-    if (inlineInput) return;
-    if (mode !== 'chords' || !getSelectedChord()) return;
-    if (event.target.matches('input, textarea, select')) return;
-    
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c') {
+    if (
+      inlineInput ||
+      mode !== 'chords'
+    ) {
+      return;
+    }
+
+    if (
+      event.target.matches(
+        'input, textarea, select'
+      )
+    ) {
+      return;
+    }
+
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key.toLowerCase() === 'c'
+    ) {
+      if (!getSelectedChord()) {
+        return;
+      }
+
       event.preventDefault();
       copySelectedChord();
       return;
     }
 
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key.toLowerCase() === 'v'
+    ) {
+      if (!getSelectedChord()) {
+        return;
+      }
+
       event.preventDefault();
       pasteChord();
+      return;
+    }
+
+    if (!getSelectedChord()) {
       return;
     }
 
@@ -1402,9 +2309,12 @@
       nudge(1);
     }
 
-    if (event.key === 'Delete' || event.key === 'Backspace') {
+    if (
+      event.key === 'Delete' ||
+      event.key === 'Backspace'
+    ) {
       event.preventDefault();
-      deleteSelected();
+      deleteSelectedChord();
     }
 
     if (event.key === 'Escape') {
@@ -1412,14 +2322,73 @@
     }
   });
 
-  if (store.songs.length) {
-    song =
-      store.songs.find(item => item.id === store.currentSongId) ||
-      store.songs[0];
+  document.addEventListener(
+    'pointerdown',
+    event => {
+      const chord =
+        event.target.closest('.chord');
 
-    normalizeSong(song);
-    resetHistory();
+      const controls =
+        event.target.closest(
+          '.mobile-controls'
+        );
+
+      const tools =
+        event.target.closest(
+          '#chordTools'
+        );
+
+      const input =
+        event.target.closest(
+          '.inline-chord-input'
+        );
+
+      const backdrop =
+        event.target.closest(
+          '#paletteBackdrop'
+        );
+
+      if (inlineInput && !input) {
+        setTimeout(
+          () => inlineInput?.blur(),
+          0
+        );
+      }
+
+      if (
+        els.chordTools.classList.contains(
+          'mobile-palette-open'
+        ) &&
+        !tools &&
+        !controls &&
+        !backdrop
+      ) {
+        closeMobilePalette();
+      }
+
+      if (
+        selectedChordId &&
+        !chord &&
+        !controls &&
+        !input &&
+        !tools
+      ) {
+        clearSelectedChord();
+      }
+    },
+    true
+  );
+
+  if (store.songs.length) {
+    const current =
+      store.songs.find(
+        item =>
+          item.id === store.currentSongId
+      ) || store.songs[0];
+
+    openEditor(current.id);
   }
 
+  renderPalette();
   renderHome();
 })();
