@@ -13,7 +13,6 @@
     <header class="home-header">
       <div>
         <h1>My Chords</h1>
-
         <nav class="app-nav" aria-label="情報ページ">
           <a href="how-to-use.html">使い方</a>
           <a href="about.html">このアプリについて</a>
@@ -21,7 +20,7 @@
         </nav>
       </div>
 
-      <button id="newSongBtn" class="primary-button">
+      <button id="newSongBtn" class="primary-button" type="button">
         ＋ 新しいコード譜を作成
       </button>
     </header>
@@ -43,7 +42,7 @@
   <section id="editorScreen" class="editor-screen hidden">
     <header class="app-header">
       <div class="editor-title-row">
-        <button id="homeBtn">← 一覧へ戻る</button>
+        <button id="homeBtn" type="button">← 一覧へ戻る</button>
         <h1>My Chords</h1>
       </div>
 
@@ -102,13 +101,7 @@
             <label>
               歌詞サイズ
               <div class="font-size-control">
-                <input
-                  id="lyricFontSizeInput"
-                  type="range"
-                  min="12"
-                  max="32"
-                  step="1"
-                >
+                <input id="lyricFontSizeInput" type="range" min="12" max="32" step="1">
                 <output id="lyricFontSizeValue">13</output>px
               </div>
             </label>
@@ -116,13 +109,7 @@
             <label>
               コードサイズ
               <div class="font-size-control">
-                <input
-                  id="chordFontSizeInput"
-                  type="range"
-                  min="12"
-                  max="32"
-                  step="1"
-                >
+                <input id="chordFontSizeInput" type="range" min="12" max="32" step="1">
                 <output id="chordFontSizeValue">13</output>px
               </div>
             </label>
@@ -135,15 +122,23 @@
       </details>
 
       <div class="toolbar">
-        <button id="lyricsMode" class="mode active">歌詞編集</button>
-        <button id="chordsMode" class="mode">コード編集</button>
-        <button id="previewMode" class="mode">プレビュー</button>
+        <button id="lyricsMode" class="mode active" type="button">
+          歌詞編集
+        </button>
+
+        <button id="chordsMode" class="mode" type="button">
+          コード編集
+        </button>
+
+        <button id="previewMode" class="mode" type="button">
+          プレビュー
+        </button>
 
         <span class="spacer"></span>
 
-        <button id="undoBtn">↶ 戻す</button>
-        <button id="redoBtn">↷ やり直す</button>
-        <button id="printBtn">印刷</button>
+        <button id="undoBtn" type="button">↶ 戻す</button>
+        <button id="redoBtn" type="button">↷ やり直す</button>
+        <button id="printBtn" type="button">印刷</button>
       </div>
 
       <div id="status" aria-live="polite"></div>
@@ -164,19 +159,150 @@
 
       <section id="chordsEditor" class="panel hidden">
         <p class="hint">
-          歌詞をタップ／クリックすると、その文字位置にコードを追加できます。
-          コードを選択してドラッグ、矢印キー、操作ボタンで調整できます。
+          コードを選択してから歌詞をタップ／クリックすると、選択したコードを追加できます。
+          未選択時はコード名を入力できます。
         </p>
+
+        <div id="chordTools" class="chord-tools">
+          <div class="tool-section palette-section">
+            <h2>コードパレット</h2>
+
+            <div
+              class="palette-tabs"
+              role="tablist"
+              aria-label="コードパレットカテゴリ"
+            >
+              <button
+                type="button"
+                class="palette-tab active"
+                data-palette="basic"
+                role="tab"
+                aria-selected="true"
+              >
+                基本
+              </button>
+
+              <button
+                type="button"
+                class="palette-tab"
+                data-palette="minor"
+                role="tab"
+                aria-selected="false"
+              >
+                マイナー
+              </button>
+
+              <button
+                type="button"
+                class="palette-tab"
+                data-palette="seventh"
+                role="tab"
+                aria-selected="false"
+              >
+                7th
+              </button>
+
+              <button
+                type="button"
+                class="palette-tab"
+                data-palette="other"
+                role="tab"
+                aria-selected="false"
+              >
+                その他
+              </button>
+            </div>
+
+            <div
+              id="chordPalette"
+              class="chord-palette"
+              aria-label="コードパレット"
+            ></div>
+
+            <button
+              id="clearPaletteBtn"
+              class="secondary-button"
+              type="button"
+            >
+              選択解除
+            </button>
+
+            <button
+              id="closePaletteBtn"
+              class="secondary-button palette-close-button"
+              type="button"
+            >
+              パレットを閉じる
+            </button>
+          </div>
+
+          <div class="tool-section transposition-tool">
+            <h2>一括移調</h2>
+
+            <div class="transpose-controls">
+              <button
+                id="transposeDownBtn"
+                type="button"
+                aria-label="半音下げる"
+              >
+                −
+              </button>
+
+              <output id="transposeValue">0</output>
+
+              <button
+                id="transposeUpBtn"
+                type="button"
+                aria-label="半音上げる"
+              >
+                ＋
+              </button>
+
+              <button id="resetTransposeBtn" type="button">
+                元に戻す
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="paletteBackdrop" class="palette-backdrop hidden"></div>
 
         <div id="scoreEditor" class="score"></div>
 
         <div id="mobileControls" class="mobile-controls hidden">
-          <button id="deleteChordBtn">削除</button>
-          <button id="nudgeLeftBtn">←</button>
-          <input id="selectedChordName" aria-label="選択中のコード名">
-          <button id="nudgeRightBtn">→</button>
-          <button id="copyChordBtn" type="button">コピー</button>
-          <button id="pasteChordBtn" type="button">貼り付け</button>
+          <button id="addChordBtn" type="button">
+            ＋コード
+          </button>
+
+          <button id="deleteChordBtn" type="button">
+            削除
+          </button>
+
+          <button id="duplicateChordBtn" type="button">
+            複製
+          </button>
+
+          <button id="nudgeLeftBtn" type="button" aria-label="左へ移動">
+            ←
+          </button>
+
+          <input
+            id="selectedChordName"
+            type="text"
+            aria-label="選択中のコード名"
+          >
+
+          <button id="nudgeRightBtn" type="button" aria-label="右へ移動">
+            →
+          </button>
+
+          <button id="copyChordBtn" type="button">
+            コピー
+          </button>
+
+          <button id="pasteChordBtn" type="button">
+            貼り付け
+          </button>
         </div>
       </section>
 
