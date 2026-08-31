@@ -544,27 +544,12 @@ select {
 
 @media (min-width: 641px) {
   .chord-tools {
-    display: grid;
-    grid-template-columns: 54px minmax(0, 1fr) 220px;
-    align-items: start;
-    gap: 14px;
-  }
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) 220px;
+   align-items: start;
+   gap: 14px;
+ }
 
-  .chord-tools::before {
-    content: "コード";
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 150px;
-    padding: 10px 8px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--accent-dark);
-    background: var(--accent-light);
-    font-weight: 800;
-    letter-spacing: .15em;
-    writing-mode: vertical-rl;
-  }
 
   .chord-palette {
     max-height: 120px;
