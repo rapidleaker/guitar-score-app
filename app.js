@@ -2379,16 +2379,14 @@
     true
   );
 
-  if (store.songs.length) {
-    const current =
-      store.songs.find(
-        item =>
-          item.id === store.currentSongId
-      ) || store.songs[0];
+  song = null;
+selectedChordId = null;
+selectedPaletteChord = null;
+mode = 'lyrics';
 
-    openEditor(current.id);
-  }
+els.editor.classList.add('hidden');
+els.home.classList.remove('hidden');
 
-  renderPalette();
-  renderHome();
+renderPalette();
+renderHome();
 })();
