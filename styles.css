@@ -610,10 +610,10 @@ select {
   }
 
   .toolbar {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
-  }
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+ }
 
   .toolbar button {
     width: 100%;
@@ -642,27 +642,79 @@ select {
     min-width: 100%;
   }
 
-  .mobile-controls {
-    left: 8px;
-    right: 8px;
-    bottom: max(8px, env(safe-area-inset-bottom));
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    width: auto;
-    transform: none;
-  }
+.mobile-controls {
+  left: 6px;
+  right: 6px;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+  gap: 4px;
+  width: auto;
+  padding: 5px;
+  transform: none;
+}
 
-  .mobile-controls input {
-    grid-column: span 2;
-    width: 100%;
-  }
+.mobile-controls #addChordBtn {
+  grid-row: 1;
+  grid-column: 1;
+}
 
-  .mobile-controls button {
-    width: 100%;
-    min-width: 0;
-    padding: .3rem .25rem;
-    font-size: .74rem;
-  }
+.mobile-controls #deleteChordBtn {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.mobile-controls #duplicateChordBtn {
+  grid-row: 1;
+  grid-column: 3;
+}
+
+.mobile-controls #copyChordBtn {
+  grid-row: 1;
+  grid-column: 4;
+}
+
+.mobile-controls #pasteChordBtn {
+  grid-row: 1;
+  grid-column: 5;
+}
+
+.mobile-controls #nudgeLeftBtn {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.mobile-controls #selectedChordName {
+  grid-row: 2;
+  grid-column: 2 / 5;
+  width: 100%;
+  min-width: 0;
+  padding: 4px;
+  font-size: .78rem;
+  text-align: center;
+}
+
+.mobile-controls #nudgeRightBtn {
+  grid-row: 2;
+  grid-column: 5;
+}
+
+.mobile-controls button {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: .25rem .15rem;
+  font-size: .68rem;
+}
+
+.mobile-controls input {
+  min-height: 34px;
+}
 
   #chordsEditor {
     padding-bottom: 150px;
