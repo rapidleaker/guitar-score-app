@@ -1563,44 +1563,44 @@
   }
 
   function parseChordName(name) {
-    const match = String(name)
-      .trim()
-      .match(
-        /^([A-Ga-g])([#♯b♭]?)(.*?)(?:\/([A-Ga-g])([#♯b♭]?))?$/
-      );
+   const match = String(name)
+    .trim()
+    .match(
+      /^([A-Ga-g])([#♯b♭]?)([^/]*?)(?:\/([A-Ga-g])([#♯b♭]?))?$/
+    );
 
-    if (!match) {
-      return null;
-    }
-
-    const normalizeAccidental = value =>
-      String(value || '')
-        .replace('♯', '#')
-        .replace('♭', 'b');
-
-    const root =
-      match[1].toUpperCase() +
-      normalizeAccidental(match[2]);
-
-    const bass = match[4]
-      ? match[4].toUpperCase() +
-        normalizeAccidental(match[5])
-      : null;
-
-    if (!getNoteIndex(root)) {
-      return null;
-    }
-
-    if (bass && !getNoteIndex(bass)) {
-      return null;
-    }
-
-    return {
-      root,
-      suffix: match[3] || '',
-      bass
-    };
+  if (!match) {
+    return null;
   }
+
+  const normalizeAccidental = value =>
+    String(value || '')
+      .replace('♯', '#')
+      .replace('♭', 'b');
+
+  const root =
+    match[1].toUpperCase() +
+    normalizeAccidental(match[2]);
+
+  const bass = match[4]
+    ? match[4].toUpperCase() +
+      normalizeAccidental(match[5])
+    : null;
+
+  if (getNoteIndex(root) === null) {
+    return null;
+  }
+
+  if (bass && getNoteIndex(bass) === null) {
+    return null;
+  }
+
+  return {
+    root,
+    suffix: match[3] || '',
+    bass
+  };
+}
 
   const SHARP_NOTES = [
     'C', 'C#', 'D', 'D#', 'E', 'F',
@@ -1616,13 +1616,13 @@
   };
 
   function getNoteIndex(note) {
-    const normalized = String(note)
-      .replace('b', '#');
+  const normalized = String(note)
+    .replace(/b/g, '#');
 
-    const index =
-      SHARP_NOTES.indexOf(normalized);
+  const index =
+    SHARP_NOTES.indexOf(normalized);
 
-    return index >= 0 ? index : null;
+  return index >= 0 ? index : null;
   }
 
   function transposeNote(note, amount) {
