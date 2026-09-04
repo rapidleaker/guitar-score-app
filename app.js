@@ -3,7 +3,6 @@
 
   const STORAGE_KEY = 'guitar-score-app-v1';
   const MAX_HISTORY = 100;
-  const LONG_PRESS = 600;
   const DRAG_THRESHOLD = 5;
   const DUPLICATE_OFFSET = 20;
 
@@ -97,6 +96,10 @@
     basic: [
       'C', 'D', 'E', 'F', 'G', 'A', 'B'
     ],
+
+    flat: [
+      'Db', 'Eb', 'Gb', 'Ab', 'Bb'
+    ],
     minor: [
       'Am', 'Bm', 'Cm', 'Dm', 'Em', 'Fm', 'Gm'
     ],
@@ -122,8 +125,6 @@
   let historyIndex = -1;
   let saveTimer = null;
   let lyricsBeforeEdit = '';
-  let longPressTimer = null;
-  let longPressTriggered = false;
   let suppressChordActivation = false;
 
   function normalizeSong(target) {
@@ -557,50 +558,14 @@
         }
 
         button.addEventListener(
-          'pointerdown',
-          event => {
-            if (event.pointerType === 'touch') {
-              event.preventDefault();
-            }
-
-            startLongPress(event);
-            startDrag(event);
-          },
-          { passive: false }
-        );
-
-        button.addEventListener(
-          'pointermove',
-          event => {
-            if (
-              dragState &&
-              event.pointerId === dragState.pointerId
-            ) {
-              cancelLongPress();
-            }
-          },
-          { passive: false }
-        );
-
-        button.addEventListener(
-          'pointerup',
-          event => {
-            cancelLongPress();
-
-            if (longPressTriggered) {
-              event.preventDefault();
-              event.stopPropagation();
-              longPressTriggered = false;
-            }
-          }
-        );
-
-        button.addEventListener(
-          'pointercancel',
-          () => {
-            cancelLongPress();
-          }
-        );
+	  'pointerdown',
+  	event => {
+   	 event.preventDefault();
+ 	 event.stopPropagation();
+    	startDrag(event);
+  	},
+  	 { passive: false }
+	);
 
         button.addEventListener(
           'click',
@@ -608,11 +573,7 @@
             event.preventDefault();
             event.stopPropagation();
 
-            if (longPressTriggered) {
-              longPressTriggered = false;
-              return;
-            }
-
+           
             if (suppressChordActivation) {
               suppressChordActivation = false;
               return;
@@ -720,11 +681,31 @@
         : String(value);
   }
 
-  function renderAll() {
-    if (!song) {
-      return;
-    }
+function preserveScrollPosition(callback) {
+  const scoreScrollTop = els.score.scrollTop;
+  const scoreScrollLeft = els.score.scrollLeft;
+  const pageScrollX = window.scrollX;
+  const pageScrollY = window.scrollY;
 
+  callback();
+
+  requestAnimationFrame(() => {
+    els.score.scrollTop = scoreScrollTop;
+    els.score.scrollLeft = scoreScrollLeft;
+
+    window.scrollTo(
+      pageScrollX,
+      pageScrollY
+    );
+  });
+}
+
+function renderAll() {
+  if (!song) {
+    return;
+  }
+
+  preserveScrollPosition(() => {
     normalizeSong(song);
 
     els.title.value = song.title;
@@ -743,8 +724,8 @@
     renderTransposeValue();
     updateMode();
     updateMobileControls();
-  }
-
+  });
+}
   function updateMode() {
     els.lyricsEditor.classList.toggle(
       'hidden',
@@ -944,50 +925,6 @@
         finish();
       }
     });
-  }
-
-  function startLongPress(event) {
-    if (
-      event.pointerType === 'mouse' ||
-      dragState
-    ) {
-      return;
-    }
-
-    const element = event.currentTarget;
-    const chord = getChord(
-      element.dataset.chordId
-    );
-
-    if (!chord) {
-      return;
-    }
-
-    cancelLongPress();
-    longPressTriggered = false;
-
-    longPressTimer = setTimeout(async () => {
-      longPressTriggered = true;
-      selectedChordId = chord.id;
-      updateMobileControls();
-
-      try {
-        await navigator.clipboard.writeText(
-          chord.name
-        );
-
-        els.status.textContent =
-          `コード「${chord.name}」をコピーしました`;
-      } catch {
-        els.status.textContent =
-          'コピーできませんでした';
-      }
-    }, LONG_PRESS);
-  }
-
-  function cancelLongPress() {
-    clearTimeout(longPressTimer);
-    longPressTimer = null;
   }
 
   function selectChord(id) {
@@ -1278,7 +1215,6 @@
       moved: false
     };
 
-    cancelLongPress();
 
     element.setPointerCapture?.(
       event.pointerId
@@ -1310,7 +1246,6 @@
     }
 
     event.preventDefault();
-    cancelLongPress();
 
     const chord =
       getChord(dragState.id);
@@ -1390,8 +1325,6 @@
     }
 
     const finished = dragState;
-
-    cancelLongPress();
 
     document.removeEventListener(
       'pointermove',
@@ -1615,32 +1548,62 @@
     'A#': 'Bb'
   };
 
-  function getNoteIndex(note) {
-  const normalized = String(note)
-    .replace(/b/g, '#');
+  const NOTE_INDEX = {
+  C: 0,
+  'C#': 1,
+  Db: 1,
+  D: 2,
+  'D#': 3,
+  Eb: 3,
+  E: 4,
+  F: 5,
+  'F#': 6,
+  Gb: 6,
+  G: 7,
+  'G#': 8,
+  Ab: 8,
+  A: 9,
+  'A#': 10,
+  Bb: 10,
+  B: 11
+};
 
-  const index =
-    SHARP_NOTES.indexOf(normalized);
+function getNoteIndex(note) {
+  const normalized = String(note || '')
+    .replace('♯', '#')
+    .replace('♭', 'b');
 
-  return index >= 0 ? index : null;
-  }
+  return Object.prototype.hasOwnProperty.call(
+    NOTE_INDEX,
+    normalized
+  )
+    ? NOTE_INDEX[normalized]
+    : null;
+}
 
   function transposeNote(note, amount) {
-    const index = getNoteIndex(note);
+  const normalized = String(note || '')
+    .replace('♯', '#')
+    .replace('♭', 'b');
 
-    if (index === null) {
-      return note;
-    }
+  const index = getNoteIndex(normalized);
 
-    const result =
-      SHARP_NOTES[
-        (index + amount + 120) % 12
-      ];
-
-    return note.includes('b')
-      ? FLAT_NOTES[result] || result
-      : result;
+  if (index === null) {
+    return note;
   }
+
+  const result =
+    SHARP_NOTES[
+      (index + amount + 120) % 12
+    ];
+
+  const usesFlat =
+    normalized.includes('b');
+
+  return usesFlat
+    ? FLAT_NOTES[result] || result
+    : result;
+}
 
   function transposeChordName(name, amount) {
     const parsed =
