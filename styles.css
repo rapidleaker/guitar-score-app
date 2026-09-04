@@ -387,6 +387,7 @@ select {
   overflow-y: visible;
   padding-bottom: 8px;
   touch-action: manipulation;
+  overscroll-behavior-x: contain;
 }
 
 .score-line,
