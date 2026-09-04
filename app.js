@@ -5,6 +5,7 @@
   const MAX_HISTORY = 100;
   const DRAG_THRESHOLD = 5;
   const DUPLICATE_OFFSET = 20;
+  const DOUBLE_TAP_DELAY = 400;
 
   const DEFAULTS = {
     lyricFontSize: 13,
@@ -100,18 +101,56 @@
     flat: [
       'Db', 'Eb', 'Gb', 'Ab', 'Bb'
     ],
+
     minor: [
       'Am', 'Bm', 'Cm', 'Dm', 'Em', 'Fm', 'Gm'
     ],
+
     seventh: [
       'C7', 'D7', 'E7', 'F7', 'G7', 'A7', 'B7'
     ],
+
     other: [
       'Cmaj7', 'Dmaj7', 'Fmaj7', 'Gmaj7',
       'Am7', 'Dm7', 'Em7',
       'Asus4', 'Dsus4', 'Esus4',
-      'Cadd9', 'Dadd9', 'Gadd9'
+      'Cadd9', 'Dadd9', 'Gadd9',
+      'C/G', 'D/F#', 'Am/C', 'G/B',
+      'Db/F', 'Eb/G', 'Bb/D'
     ]
+  };
+
+  const SHARP_NOTES = [
+    'C', 'C#', 'D', 'D#', 'E', 'F',
+    'F#', 'G', 'G#', 'A', 'A#', 'B'
+  ];
+
+  const FLAT_NOTES = {
+    'C#': 'Db',
+    'D#': 'Eb',
+    'F#': 'Gb',
+    'G#': 'Ab',
+    'A#': 'Bb'
+  };
+
+  const NOTE_INDEX = {
+    C: 0,
+    'C#': 1,
+    Db: 1,
+    D: 2,
+    'D#': 3,
+    Eb: 3,
+    E: 4,
+    F: 5,
+    'F#': 6,
+    Gb: 6,
+    G: 7,
+    'G#': 8,
+    Ab: 8,
+    A: 9,
+    'A#': 10,
+    Bb: 10,
+    B: 11
   };
 
   let store = loadStore();
@@ -125,8 +164,25 @@
   let historyIndex = -1;
   let saveTimer = null;
   let lyricsBeforeEdit = '';
-  let suppressChordActivation = false;
   let lastChordTap = null;
+  let suppressChordActivation = false;
+
+  function normalizeAccidental(value) {
+    return String(value || '')
+      .replace('♯', '#')
+      .replace('♭', 'b');
+  }
+
+  function getNoteIndex(note) {
+    const normalized = normalizeAccidental(note);
+
+    return Object.prototype.hasOwnProperty.call(
+      NOTE_INDEX,
+      normalized
+    )
+      ? NOTE_INDEX[normalized]
+      : null;
+  }
 
   function normalizeSong(target) {
     if (!target || typeof target !== 'object') {
@@ -140,23 +196,36 @@
 
     target.lyrics = String(
       target.lyrics ??
-      (Array.isArray(target.lines)
-        ? target.lines.map(line => line.text || '').join('\n')
-        : '')
+      (
+        Array.isArray(target.lines)
+          ? target.lines
+            .map(line => String(line?.text || ''))
+            .join('\n')
+          : ''
+      )
     );
 
     target.capo = clamp(target.capo, 0, 12, 0);
-    target.transpose = clamp(target.transpose, -12, 12, 0);
-    target.updatedAt = Number(target.updatedAt) || Date.now();
+    target.transpose = clamp(
+      target.transpose,
+      -12,
+      12,
+      0
+    );
+
+    target.updatedAt =
+      Number(target.updatedAt) || Date.now();
 
     const oldLines = Array.isArray(target.lines)
       ? target.lines
       : [];
 
-    target.lines = target.lyrics.split('\n').map((text, index) => ({
-      id: oldLines[index]?.id || uid('line'),
-      text
-    }));
+    target.lines = target.lyrics
+      .split('\n')
+      .map((text, index) => ({
+        id: oldLines[index]?.id || uid('line'),
+        text
+      }));
 
     if (!target.lines.length) {
       target.lines.push({
@@ -171,19 +240,19 @@
 
     target.chords = Array.isArray(target.chords)
       ? target.chords
-          .map(chord => ({
-            id: chord.id || uid('chord'),
-            name: String(chord.name || ''),
-            lineId: validLineIds.has(chord.lineId)
-              ? chord.lineId
-              : target.lines[0].id,
-            charIndex: Math.max(
-              0,
-              Number(chord.charIndex) || 0
-            ),
-            offset: Number(chord.offset) || 0
-          }))
-          .filter(chord => chord.name)
+        .map(chord => ({
+          id: chord.id || uid('chord'),
+          name: String(chord.name || '').trim(),
+          lineId: validLineIds.has(chord.lineId)
+            ? chord.lineId
+            : target.lines[0].id,
+          charIndex: Math.max(
+            0,
+            Number(chord.charIndex) || 0
+          ),
+          offset: Number(chord.offset) || 0
+        }))
+        .filter(chord => chord.name)
       : [];
 
     target.lyricFontSize = clamp(
@@ -237,7 +306,8 @@
           songs: saved.songs
             .map(normalizeSong)
             .filter(Boolean),
-          currentSongId: saved.currentSongId || null
+          currentSongId:
+            saved.currentSongId || null
         };
       }
 
@@ -258,10 +328,17 @@
       store.currentSongId = song.id;
     }
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(store)
-    );
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(store)
+      );
+    } catch {
+      if (els.status) {
+        els.status.textContent =
+          '保存できませんでした';
+      }
+    }
   }
 
   function save() {
@@ -293,7 +370,10 @@
 
     song.updatedAt = Date.now();
 
-    history = history.slice(0, historyIndex + 1);
+    history = history.slice(
+      0,
+      historyIndex + 1
+    );
 
     history.push({
       song: clone(song),
@@ -383,7 +463,8 @@
       return 0;
     }
 
-    const rowRect = row.getBoundingClientRect();
+    const rowRect =
+      row.getBoundingClientRect();
 
     if (index >= chars.length) {
       return (
@@ -400,7 +481,6 @@
   }
 
   function getCharIndexAtX(row, clientX) {
-    const rowRect = row.getBoundingClientRect();
     const chars = [
       ...row.querySelectorAll('.lyric-char')
     ];
@@ -438,11 +518,14 @@
     if (editable) {
       row.addEventListener('pointerup', event => {
         if (
-          dragState ||
           event.target.closest(
             '.chord, .inline-chord-input'
           )
         ) {
+          return;
+        }
+
+        if (dragState) {
           return;
         }
 
@@ -453,7 +536,10 @@
           event.clientX - rowRect.left;
 
         const charIndex =
-          getCharIndexAtX(row, event.clientX);
+          getCharIndexAtX(
+            row,
+            event.clientX
+          );
 
         if (selectedPaletteChord) {
           addChord(
@@ -499,7 +585,10 @@
       return;
     }
 
-    const baseX = getCharX(row, charIndex);
+    const baseX = getCharX(
+      row,
+      charIndex
+    );
 
     const chord = {
       id: uid('chord'),
@@ -559,70 +648,46 @@
         }
 
         button.addEventListener(
-	  'pointerdown',
-  	event => {
-   	 event.preventDefault();
- 	 event.stopPropagation();
-    	startDrag(event);
-  	},
-  	 { passive: false }
-	);
-
-        button.addEventListener(
-  'click',
-  event => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (suppressChordActivation) {
-      suppressChordActivation = false;
-      return;
-    }
-
-    const now = Date.now();
-    const isTouch =
-      event.pointerType === 'touch' ||
-      navigator.maxTouchPoints > 0;
-
-    const isDoubleTap =
-      isTouch &&
-      lastChordTap &&
-      lastChordTap.id === chord.id &&
-      now - lastChordTap.time <= 350;
-
-    if (isDoubleTap) {
-      lastChordTap = null;
-
-      showExistingChordInput(
-        row,
-        button,
-        chord
-      );
-
-      return;
-    }
-
-    lastChordTap = {
-      id: chord.id,
-      time: now
-    };
-
-    selectChord(chord.id);
-  }
-);
-
-        button.addEventListener(
-          'dblclick',
+          'pointerdown',
           event => {
             event.preventDefault();
             event.stopPropagation();
+            startDrag(event);
+          },
+          { passive: false }
+        );
 
-            showExistingChordInput(
-              row,
-              button,
-              chord
-            );
-          }
+        button.addEventListener(
+          'pointermove',
+          event => {
+            if (
+              dragState &&
+              event.pointerId ===
+                dragState.pointerId
+            ) {
+              moveDrag(event);
+            }
+          },
+          { passive: false }
+        );
+
+        button.addEventListener(
+          'pointerup',
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
+          },
+          { passive: false }
+        );
+
+        button.addEventListener(
+          'pointercancel',
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
+            endDrag(event);
+          },
+          { passive: false }
         );
 
         row.appendChild(button);
@@ -636,7 +701,11 @@
       const row = createRow(line, true);
 
       els.score.appendChild(row);
-      renderChordsOnRow(row, line.id, true);
+      renderChordsOnRow(
+        row,
+        line.id,
+        true
+      );
     });
   }
 
@@ -650,7 +719,9 @@
     artist.className = 'artist';
     artist.textContent = [
       song.artist,
-      song.key ? `Key: ${song.key}` : 'Key: 未設定',
+      song.key
+        ? `Key: ${song.key}`
+        : 'Key: 未設定',
       `Capo: ${song.capo}`
     ]
       .filter(Boolean)
@@ -659,13 +730,21 @@
     const score = document.createElement('div');
     score.className = 'score';
 
-    els.previewSheet.append(title, artist, score);
+    els.previewSheet.append(
+      title,
+      artist,
+      score
+    );
 
     song.lines.forEach(line => {
       const row = createRow(line, false);
 
       score.appendChild(row);
-      renderChordsOnRow(row, line.id, false);
+      renderChordsOnRow(
+        row,
+        line.id,
+        false
+      );
     });
   }
 
@@ -692,16 +771,28 @@
       song.chordFontFamily
     );
 
-    els.lyricSize.value = song.lyricFontSize;
-    els.chordSize.value = song.chordFontSize;
-    els.lyricSizeValue.textContent = song.lyricFontSize;
-    els.chordSizeValue.textContent = song.chordFontSize;
-    els.lyricFamily.value = song.lyricFontFamily;
-    els.chordFamily.value = song.chordFontFamily;
+    els.lyricSize.value =
+      song.lyricFontSize;
+
+    els.chordSize.value =
+      song.chordFontSize;
+
+    els.lyricSizeValue.textContent =
+      song.lyricFontSize;
+
+    els.chordSizeValue.textContent =
+      song.chordFontSize;
+
+    els.lyricFamily.value =
+      song.lyricFontFamily;
+
+    els.chordFamily.value =
+      song.chordFontFamily;
   }
 
   function renderTransposeValue() {
-    const value = Number(song?.transpose) || 0;
+    const value =
+      Number(song?.transpose) || 0;
 
     els.transposeValue.textContent =
       value > 0
@@ -709,51 +800,48 @@
         : String(value);
   }
 
-function preserveScrollPosition(callback) {
-  const scoreScrollTop = els.score.scrollTop;
-  const scoreScrollLeft = els.score.scrollLeft;
-  const pageScrollX = window.scrollX;
-  const pageScrollY = window.scrollY;
+  function preserveScrollPosition(callback) {
+    const pageX = window.scrollX;
+    const pageY = window.scrollY;
+    const scoreLeft = els.score.scrollLeft;
+    const scoreTop = els.score.scrollTop;
 
-  callback();
+    callback();
 
-  requestAnimationFrame(() => {
-    els.score.scrollTop = scoreScrollTop;
-    els.score.scrollLeft = scoreScrollLeft;
-
-    window.scrollTo(
-      pageScrollX,
-      pageScrollY
-    );
-  });
-}
-
-function renderAll() {
-  if (!song) {
-    return;
+    requestAnimationFrame(() => {
+      els.score.scrollLeft = scoreLeft;
+      els.score.scrollTop = scoreTop;
+      window.scrollTo(pageX, pageY);
+    });
   }
 
-  preserveScrollPosition(() => {
-    normalizeSong(song);
-
-    els.title.value = song.title;
-    els.artist.value = song.artist;
-    els.key.value = song.key;
-    els.capo.value = song.capo;
-
-    if (els.lyrics.value !== song.lyrics) {
-      els.lyrics.value = song.lyrics;
+  function renderAll() {
+    if (!song) {
+      return;
     }
 
-    renderFonts();
-    renderEditor();
-    renderPreview();
-    renderPalette();
-    renderTransposeValue();
-    updateMode();
-    updateMobileControls();
-  });
-}
+    preserveScrollPosition(() => {
+      normalizeSong(song);
+
+      els.title.value = song.title;
+      els.artist.value = song.artist;
+      els.key.value = song.key;
+      els.capo.value = song.capo;
+
+      if (els.lyrics.value !== song.lyrics) {
+        els.lyrics.value = song.lyrics;
+      }
+
+      renderFonts();
+      renderEditor();
+      renderPreview();
+      renderPalette();
+      renderTransposeValue();
+      updateMode();
+      updateMobileControls();
+    });
+  }
+
   function updateMode() {
     els.lyricsEditor.classList.toggle(
       'hidden',
@@ -794,12 +882,13 @@ function renderAll() {
 
     if (mode === 'chords') {
       renderEditor();
-      updateMobileControls();
     }
 
     if (mode === 'preview') {
       renderPreview();
     }
+
+    updateMobileControls();
   }
 
   function closeInlineInput() {
@@ -840,18 +929,23 @@ function renderAll() {
       const name = input.value.trim();
 
       if (name) {
-        const baseX = getCharX(row, charIndex);
+        const baseX = getCharX(
+          row,
+          charIndex
+        );
 
-        const chord = {
+        song.chords.push({
           id: uid('chord'),
           name,
           lineId,
           charIndex,
           offset: clickX - baseX
-        };
+        });
 
-        song.chords.push(chord);
-        selectedChordId = chord.id;
+        selectedChordId =
+          song.chords[
+            song.chords.length - 1
+          ].id;
 
         commit('コード追加');
       }
@@ -860,25 +954,31 @@ function renderAll() {
       renderAll();
     };
 
-    input.addEventListener('keydown', event => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        finish();
-      }
+    input.addEventListener(
+      'keydown',
+      event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          finish();
+        }
 
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        cancelled = true;
-        finished = true;
-        closeInlineInput();
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          cancelled = true;
+          finished = true;
+          closeInlineInput();
+        }
       }
-    });
+    );
 
-    input.addEventListener('blur', () => {
-      if (!cancelled) {
-        finish();
+    input.addEventListener(
+      'blur',
+      () => {
+        if (!cancelled) {
+          finish();
+        }
       }
-    });
+    );
   }
 
   function showExistingChordInput(
@@ -889,7 +989,6 @@ function renderAll() {
     closeInlineInput();
 
     selectedChordId = chord.id;
-    updateMobileControls();
 
     const input = document.createElement('input');
 
@@ -899,7 +998,9 @@ function renderAll() {
     input.value = chord.name;
     input.autocomplete = 'off';
 
-    const rowRect = row.getBoundingClientRect();
+    const rowRect =
+      row.getBoundingClientRect();
+
     const chordRect =
       chordElement.getBoundingClientRect();
 
@@ -934,25 +1035,76 @@ function renderAll() {
       renderAll();
     };
 
-    input.addEventListener('keydown', event => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        finish();
-      }
+    input.addEventListener(
+      'keydown',
+      event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          finish();
+        }
 
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        cancelled = true;
-        finished = true;
-        closeInlineInput();
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          cancelled = true;
+          finished = true;
+          closeInlineInput();
+        }
       }
-    });
+    );
 
-    input.addEventListener('blur', () => {
-      if (!cancelled) {
-        finish();
+    input.addEventListener(
+      'blur',
+      () => {
+        if (!cancelled) {
+          finish();
+        }
       }
-    });
+    );
+  }
+
+  function handleChordTap(
+    chord,
+    row,
+    button
+  ) {
+    const now = Date.now();
+
+    const isDoubleTap =
+      lastChordTap &&
+      lastChordTap.id === chord.id &&
+      now - lastChordTap.time <=
+        DOUBLE_TAP_DELAY;
+
+    if (isDoubleTap) {
+      lastChordTap = null;
+
+      showExistingChordInput(
+        row,
+        button,
+        chord
+      );
+
+      return;
+    }
+
+    lastChordTap = {
+      id: chord.id,
+      time: now
+    };
+
+    selectChord(chord.id);
+
+    setTimeout(() => {
+      if (
+        lastChordTap &&
+        lastChordTap.id === chord.id &&
+        Date.now() -
+          lastChordTap.time >
+          DOUBLE_TAP_DELAY
+      ) {
+        lastChordTap = null;
+      }
+    }, DOUBLE_TAP_DELAY + 50);
   }
 
   function selectChord(id) {
@@ -978,6 +1130,7 @@ function renderAll() {
 
   function clearSelectedChord() {
     selectedChordId = null;
+    lastChordTap = null;
 
     els.score
       .querySelectorAll('.chord.selected')
@@ -1005,11 +1158,8 @@ function renderAll() {
     els.paste.disabled = !chord;
     els.selectedName.disabled = !chord;
 
-    if (chord) {
-      els.selectedName.value = chord.name;
-    } else {
-      els.selectedName.value = '';
-    }
+    els.selectedName.value =
+      chord ? chord.name : '';
   }
 
   function openMobilePalette() {
@@ -1076,15 +1226,15 @@ function renderAll() {
       return;
     }
 
-    if (!name) {
-      return;
-    }
-
     const baseChord = getSelectedChord();
 
     if (!baseChord) {
       els.status.textContent =
         '貼り付ける位置のコードを先に選択してください';
+      return;
+    }
+
+    if (!name) {
       return;
     }
 
@@ -1121,7 +1271,6 @@ function renderAll() {
 
     while (
       song.chords.some(chord =>
-        chord.id !== copied.id &&
         chord.lineId === copied.lineId &&
         chord.charIndex === copied.charIndex &&
         Math.abs(
@@ -1181,22 +1330,22 @@ function renderAll() {
     }
 
     return rows.reduce((nearest, row) => {
-      const rect = row.getBoundingClientRect();
+      const rect =
+        row.getBoundingClientRect();
+
       const nearestRect =
         nearest.getBoundingClientRect();
 
-      const distance =
-        Math.abs(
-          clientY -
-          (rect.top + rect.height / 2)
-        );
+      const distance = Math.abs(
+        clientY -
+        (rect.top + rect.height / 2)
+      );
 
-      const nearestDistance =
-        Math.abs(
-          clientY -
-          (nearestRect.top +
-            nearestRect.height / 2)
-        );
+      const nearestDistance = Math.abs(
+        clientY -
+        (nearestRect.top +
+          nearestRect.height / 2)
+      );
 
       return distance < nearestDistance
         ? row
@@ -1205,12 +1354,12 @@ function renderAll() {
   }
 
   function startDrag(event) {
-    if (mode !== 'chords') {
+    if (
+      mode !== 'chords' ||
+      dragState
+    ) {
       return;
     }
-
-    event.preventDefault();
-    event.stopPropagation();
 
     const element = event.currentTarget;
     const chord = getChord(
@@ -1223,6 +1372,9 @@ function renderAll() {
       return;
     }
 
+    event.preventDefault();
+    event.stopPropagation();
+
     const rect =
       element.getBoundingClientRect();
 
@@ -1233,6 +1385,8 @@ function renderAll() {
       pointerId: event.pointerId,
       element,
       currentRow: row,
+      startX: event.clientX,
+      startY: event.clientY,
       grabDelta:
         event.clientX -
         (rect.left + rect.width / 2),
@@ -1243,32 +1397,42 @@ function renderAll() {
       moved: false
     };
 
-
     element.setPointerCapture?.(
       event.pointerId
     );
 
-    document.addEventListener(
-      'pointermove',
-      moveDrag,
-      { passive: false }
-    );
-
-    document.addEventListener(
+    window.addEventListener(
       'pointerup',
-      endDrag
+      endDrag,
+      true
     );
 
-    document.addEventListener(
+    window.addEventListener(
       'pointercancel',
-      endDrag
+      endDrag,
+      true
     );
+
+    updateMobileControls();
   }
 
   function moveDrag(event) {
     if (
       !dragState ||
-      event.pointerId !== dragState.pointerId
+      event.pointerId !==
+        dragState.pointerId
+    ) {
+      return;
+    }
+
+    const distance = Math.hypot(
+      event.clientX - dragState.startX,
+      event.clientY - dragState.startY
+    );
+
+    if (
+      !dragState.moved &&
+      distance < DRAG_THRESHOLD
     ) {
       return;
     }
@@ -1284,6 +1448,8 @@ function renderAll() {
     if (!chord || !targetRow) {
       return;
     }
+
+    dragState.moved = true;
 
     const rowRect =
       targetRow.getBoundingClientRect();
@@ -1305,26 +1471,11 @@ function renderAll() {
       rowRect.left -
       dragState.grabDelta;
 
-    const offset =
-      centerX - baseX;
-
-    const lineId =
+    chord.lineId =
       targetRow.dataset.lineId;
 
-    if (
-      chord.lineId !== lineId ||
-      chord.charIndex !== charIndex ||
-      Math.abs(
-        offset -
-        dragState.originalOffset
-      ) >= DRAG_THRESHOLD
-    ) {
-      dragState.moved = true;
-    }
-
-    chord.lineId = lineId;
     chord.charIndex = charIndex;
-    chord.offset = offset;
+    chord.offset = centerX - baseX;
 
     if (
       dragState.currentRow !== targetRow
@@ -1337,54 +1488,72 @@ function renderAll() {
     }
 
     dragState.element.style.left =
-      `${baseX + offset}px`;
+      `${baseX + chord.offset}px`;
   }
 
   function endDrag(event) {
+    if (!dragState) {
+      return;
+    }
+
     if (
-      !dragState ||
-      (
-        event &&
-        event.pointerId !==
-          dragState.pointerId
-      )
+      event &&
+      event.pointerId !==
+        dragState.pointerId
     ) {
       return;
     }
 
     const finished = dragState;
+    const chord = getChord(finished.id);
 
-    document.removeEventListener(
-      'pointermove',
-      moveDrag
-    );
-
-    document.removeEventListener(
+    window.removeEventListener(
       'pointerup',
-      endDrag
+      endDrag,
+      true
     );
 
-    document.removeEventListener(
+    window.removeEventListener(
       'pointercancel',
-      endDrag
+      endDrag,
+      true
     );
+
+    try {
+      finished.element.releasePointerCapture?.(
+        finished.pointerId
+      );
+    } catch {
+      // Pointer Capture解除失敗は無視する
+    }
 
     dragState = null;
-    selectedChordId = finished.id;
+
+    if (!chord) {
+      return;
+    }
+
+    selectedChordId = chord.id;
 
     if (finished.moved) {
-  suppressChordActivation = true;
-  lastChordTap = null;
+      lastChordTap = null;
+      suppressChordActivation = true;
 
-  commit('コード移動');
-  renderAll();
+      commit('コード移動');
+      renderAll();
 
-  setTimeout(() => {
-    suppressChordActivation = false;
-  }, 0);
-} else {
-  updateMobileControls();
-}
+      setTimeout(() => {
+        suppressChordActivation = false;
+      }, 0);
+
+      return;
+    }
+
+    handleChordTap(
+      chord,
+      finished.currentRow,
+      finished.element
+    );
   }
 
   function applyLyrics(text) {
@@ -1393,35 +1562,31 @@ function renderAll() {
 
     song.lyrics = String(text);
 
-    song.lines =
-      song.lyrics.split('\n').map(
-        (lineText, index) => ({
-          id:
-            previousLines[index]?.id ||
-            uid('line'),
-          text: lineText
-        })
-      );
+    song.lines = song.lyrics
+      .split('\n')
+      .map((lineText, index) => ({
+        id:
+          previousLines[index]?.id ||
+          uid('line'),
+        text: lineText
+      }));
 
-    const validLineIds =
-      new Set(
-        song.lines.map(line => line.id)
-      );
+    const validLineIds = new Set(
+      song.lines.map(line => line.id)
+    );
 
-    song.chords =
-      song.chords.filter(chord =>
-        validLineIds.has(chord.lineId)
-      );
+    song.chords = song.chords.filter(
+      chord => validLineIds.has(chord.lineId)
+    );
   }
 
   function updateMeta() {
-    const before =
-      JSON.stringify({
-        title: song.title,
-        artist: song.artist,
-        key: song.key,
-        capo: song.capo
-      });
+    const before = JSON.stringify({
+      title: song.title,
+      artist: song.artist,
+      key: song.key,
+      capo: song.capo
+    });
 
     song.title = els.title.value;
     song.artist = els.artist.value;
@@ -1433,13 +1598,12 @@ function renderAll() {
       0
     );
 
-    const after =
-      JSON.stringify({
-        title: song.title,
-        artist: song.artist,
-        key: song.key,
-        capo: song.capo
-      });
+    const after = JSON.stringify({
+      title: song.title,
+      artist: song.artist,
+      key: song.key,
+      capo: song.capo
+    });
 
     if (before === after) {
       return;
@@ -1525,114 +1689,63 @@ function renderAll() {
   }
 
   function parseChordName(name) {
-   const match = String(name)
-    .trim()
-    .match(
-      /^([A-Ga-g])([#♯b♭]?)([^/]*?)(?:\/([A-Ga-g])([#♯b♭]?))?$/
-    );
+    const match = String(name)
+      .trim()
+      .match(
+        /^([A-Ga-g])([#♯b♭]?)([^/]*?)(?:\/([A-Ga-g])([#♯b♭]?))?$/
+      );
 
-  if (!match) {
-    return null;
+    if (!match) {
+      return null;
+    }
+
+    const root =
+      match[1].toUpperCase() +
+      normalizeAccidental(match[2]);
+
+    const bass = match[4]
+      ? match[4].toUpperCase() +
+        normalizeAccidental(match[5])
+      : null;
+
+    if (getNoteIndex(root) === null) {
+      return null;
+    }
+
+    if (
+      bass &&
+      getNoteIndex(bass) === null
+    ) {
+      return null;
+    }
+
+    return {
+      root,
+      suffix: match[3] || '',
+      bass
+    };
   }
-
-  const normalizeAccidental = value =>
-    String(value || '')
-      .replace('♯', '#')
-      .replace('♭', 'b');
-
-  const root =
-    match[1].toUpperCase() +
-    normalizeAccidental(match[2]);
-
-  const bass = match[4]
-    ? match[4].toUpperCase() +
-      normalizeAccidental(match[5])
-    : null;
-
-  if (getNoteIndex(root) === null) {
-    return null;
-  }
-
-  if (bass && getNoteIndex(bass) === null) {
-    return null;
-  }
-
-  return {
-    root,
-    suffix: match[3] || '',
-    bass
-  };
-}
-
-  const SHARP_NOTES = [
-    'C', 'C#', 'D', 'D#', 'E', 'F',
-    'F#', 'G', 'G#', 'A', 'A#', 'B'
-  ];
-
-  const FLAT_NOTES = {
-    'C#': 'Db',
-    'D#': 'Eb',
-    'F#': 'Gb',
-    'G#': 'Ab',
-    'A#': 'Bb'
-  };
-
-  const NOTE_INDEX = {
-  C: 0,
-  'C#': 1,
-  Db: 1,
-  D: 2,
-  'D#': 3,
-  Eb: 3,
-  E: 4,
-  F: 5,
-  'F#': 6,
-  Gb: 6,
-  G: 7,
-  'G#': 8,
-  Ab: 8,
-  A: 9,
-  'A#': 10,
-  Bb: 10,
-  B: 11
-};
-
-function getNoteIndex(note) {
-  const normalized = String(note || '')
-    .replace('♯', '#')
-    .replace('♭', 'b');
-
-  return Object.prototype.hasOwnProperty.call(
-    NOTE_INDEX,
-    normalized
-  )
-    ? NOTE_INDEX[normalized]
-    : null;
-}
 
   function transposeNote(note, amount) {
-  const normalized = String(note || '')
-    .replace('♯', '#')
-    .replace('♭', 'b');
+    const normalized =
+      normalizeAccidental(note);
 
-  const index = getNoteIndex(normalized);
+    const index =
+      getNoteIndex(normalized);
 
-  if (index === null) {
-    return note;
+    if (index === null) {
+      return note;
+    }
+
+    const result =
+      SHARP_NOTES[
+        (index + amount + 120) % 12
+      ];
+
+    return normalized.includes('b')
+      ? FLAT_NOTES[result] || result
+      : result;
   }
-
-  const result =
-    SHARP_NOTES[
-      (index + amount + 120) % 12
-    ];
-
-  const usesFlat =
-    normalized.includes('b');
-
-  return usesFlat
-    ? FLAT_NOTES[result] || result
-    : result;
-}
 
   function transposeChordName(name, amount) {
     const parsed =
@@ -1642,11 +1755,10 @@ function getNoteIndex(note) {
       return name;
     }
 
-    const root =
-      transposeNote(
-        parsed.root,
-        amount
-      );
+    const root = transposeNote(
+      parsed.root,
+      amount
+    );
 
     const bass = parsed.bass
       ? `/${transposeNote(
@@ -1666,11 +1778,10 @@ function getNoteIndex(note) {
     const current =
       Number(song.transpose) || 0;
 
-    const next =
-      Math.max(
-        -12,
-        Math.min(12, current + amount)
-      );
+    const next = Math.max(
+      -12,
+      Math.min(12, current + amount)
+    );
 
     const delta = next - current;
 
@@ -1731,16 +1842,19 @@ function getNoteIndex(note) {
           ? 'selected'
           : '';
 
-      button.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
+      button.addEventListener(
+        'click',
+        event => {
+          event.preventDefault();
+          event.stopPropagation();
 
-        selectedPaletteChord = name;
-        renderPalette();
+          selectedPaletteChord = name;
+          renderPalette();
 
-        els.status.textContent =
-          `「${name}」を選択中。歌詞上の位置をクリックしてください`;
-      });
+          els.status.textContent =
+            `「${name}」を選択中。歌詞上の位置をクリックしてください`;
+        }
+      );
 
       els.palette.appendChild(button);
     });
@@ -1758,19 +1872,34 @@ function getNoteIndex(note) {
     );
 
     [...store.songs]
-      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .sort((a, b) =>
+        b.updatedAt - a.updatedAt
+      )
       .forEach(item => {
-        const card = document.createElement('article');
-        const title = document.createElement('h3');
-        const artist = document.createElement('p');
-        const meta = document.createElement('p');
-        const updated = document.createElement('p');
-        const actions = document.createElement('div');
+        const card =
+          document.createElement('article');
+
+        const title =
+          document.createElement('h3');
+
+        const artist =
+          document.createElement('p');
+
+        const meta =
+          document.createElement('p');
+
+        const updated =
+          document.createElement('p');
+
+        const actions =
+          document.createElement('div');
 
         const openButton =
           document.createElement('button');
+
         const duplicateButton =
           document.createElement('button');
+
         const deleteButton =
           document.createElement('button');
 
@@ -1780,16 +1909,20 @@ function getNoteIndex(note) {
           item.title || '無題';
 
         artist.textContent =
-          item.artist || 'アーティスト未設定';
+          item.artist ||
+          'アーティスト未設定';
 
         meta.textContent = [
-          item.key ? `Key: ${item.key}` : '',
+          item.key
+            ? `Key: ${item.key}`
+            : '',
           Number(item.capo)
             ? `Capo: ${item.capo}`
             : ''
         ]
           .filter(Boolean)
-          .join(' / ') || '曲情報未設定';
+          .join(' / ') ||
+          '曲情報未設定';
 
         updated.textContent =
           `更新: ${new Date(
@@ -1876,6 +2009,7 @@ function getNoteIndex(note) {
 
     selectedChordId = null;
     selectedPaletteChord = null;
+    lastChordTap = null;
     mode = 'lyrics';
 
     closeMobilePalette();
@@ -1956,8 +2090,9 @@ function getNoteIndex(note) {
       return;
     }
 
-    store.songs =
-      store.songs.filter(item => item.id !== id);
+    store.songs = store.songs.filter(
+      item => item.id !== id
+    );
 
     if (store.currentSongId === id) {
       store.currentSongId = null;
@@ -1973,44 +2108,57 @@ function getNoteIndex(note) {
     renderHome();
   }
 
-  els.newSong.addEventListener('click', () => {
-    const fresh = createSong();
+  els.newSong.addEventListener(
+    'click',
+    () => {
+      const fresh = createSong();
 
-    store.songs.push(fresh);
-    song = fresh;
-    store.currentSongId = fresh.id;
+      store.songs.push(fresh);
+      song = fresh;
+      store.currentSongId = fresh.id;
 
-    persist();
-    openEditor(fresh.id);
-  });
+      persist();
+      openEditor(fresh.id);
+    }
+  );
 
   els.homeBtn.addEventListener(
     'click',
     showHome
   );
 
-  els.lyrics.addEventListener('focus', () => {
-    lyricsBeforeEdit = song?.lyrics || '';
-  });
-
-  els.lyrics.addEventListener('input', () => {
-    if (!song) {
-      return;
+  els.lyrics.addEventListener(
+    'focus',
+    () => {
+      lyricsBeforeEdit =
+        song?.lyrics || '';
     }
+  );
 
-    applyLyrics(els.lyrics.value);
-    renderEditor();
-    save();
-  });
+  els.lyrics.addEventListener(
+    'input',
+    () => {
+      if (!song) {
+        return;
+      }
 
-  els.lyrics.addEventListener('blur', () => {
-    if (
-      song &&
-      lyricsBeforeEdit !== song.lyrics
-    ) {
-      commit('歌詞を編集');
+      applyLyrics(els.lyrics.value);
+      renderEditor();
+      save();
     }
-  });
+  );
+
+  els.lyrics.addEventListener(
+    'blur',
+    () => {
+      if (
+        song &&
+        lyricsBeforeEdit !== song.lyrics
+      ) {
+        commit('歌詞を編集');
+      }
+    }
+  );
 
   [
     els.title,
@@ -2193,126 +2341,159 @@ function getNoteIndex(note) {
     () => switchMode('preview')
   );
 
-  els.undo.addEventListener('click', () => {
-    if (historyIndex <= 0) {
-      return;
+  els.undo.addEventListener(
+    'click',
+    () => {
+      if (historyIndex <= 0) {
+        return;
+      }
+
+      song = clone(
+        history[--historyIndex].song
+      );
+
+      normalizeSong(song);
+
+      selectedChordId =
+        getChord(selectedChordId)
+          ? selectedChordId
+          : null;
+
+      replaceCurrentSong();
+      renderAll();
+      updateHistoryButtons();
     }
+  );
 
-    song = clone(
-      history[--historyIndex].song
-    );
+  els.redo.addEventListener(
+    'click',
+    () => {
+      if (
+        historyIndex >=
+        history.length - 1
+      ) {
+        return;
+      }
 
-    normalizeSong(song);
-    selectedChordId =
-      getChord(selectedChordId)
-        ? selectedChordId
-        : null;
+      song = clone(
+        history[++historyIndex].song
+      );
 
-    replaceCurrentSong();
-    renderAll();
-    updateHistoryButtons();
-  });
+      normalizeSong(song);
 
-  els.redo.addEventListener('click', () => {
-    if (
-      historyIndex >= history.length - 1
-    ) {
-      return;
+      selectedChordId =
+        getChord(selectedChordId)
+          ? selectedChordId
+          : null;
+
+      replaceCurrentSong();
+      renderAll();
+      updateHistoryButtons();
     }
+  );
 
-    song = clone(
-      history[++historyIndex].song
-    );
+  els.print.addEventListener(
+    'click',
+    () => {
+      closeInlineInput();
+      closeMobilePalette();
+      renderPreview();
 
-    normalizeSong(song);
-    selectedChordId =
-      getChord(selectedChordId)
-        ? selectedChordId
-        : null;
-
-    replaceCurrentSong();
-    renderAll();
-    updateHistoryButtons();
-  });
-
-  els.print.addEventListener('click', () => {
-    closeInlineInput();
-    closeMobilePalette();
-    renderPreview();
-
-    requestAnimationFrame(() => {
-      window.print();
-    });
-  });
-
-  document.addEventListener('keydown', event => {
-    if (
-      inlineInput ||
-      mode !== 'chords'
-    ) {
-      return;
+      requestAnimationFrame(() => {
+        window.print();
+      });
     }
+  );
 
-    if (
-      event.target.matches(
-        'input, textarea, select'
-      )
-    ) {
-      return;
-    }
+  window.addEventListener(
+    'pointermove',
+    moveDrag,
+    { passive: false }
+  );
 
-    if (
-      (event.ctrlKey || event.metaKey) &&
-      event.key.toLowerCase() === 'c'
-    ) {
+  window.addEventListener(
+    'pointerup',
+    endDrag,
+    true
+  );
+
+  window.addEventListener(
+    'pointercancel',
+    endDrag,
+    true
+  );
+
+  document.addEventListener(
+    'keydown',
+    event => {
+      if (
+        inlineInput ||
+        mode !== 'chords'
+      ) {
+        return;
+      }
+
+      if (
+        event.target.matches(
+          'input, textarea, select'
+        )
+      ) {
+        return;
+      }
+
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key.toLowerCase() === 'c'
+      ) {
+        if (!getSelectedChord()) {
+          return;
+        }
+
+        event.preventDefault();
+        copySelectedChord();
+        return;
+      }
+
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key.toLowerCase() === 'v'
+      ) {
+        if (!getSelectedChord()) {
+          return;
+        }
+
+        event.preventDefault();
+        pasteChord();
+        return;
+      }
+
       if (!getSelectedChord()) {
         return;
       }
 
-      event.preventDefault();
-      copySelectedChord();
-      return;
-    }
-
-    if (
-      (event.ctrlKey || event.metaKey) &&
-      event.key.toLowerCase() === 'v'
-    ) {
-      if (!getSelectedChord()) {
-        return;
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        nudge(-1);
       }
 
-      event.preventDefault();
-      pasteChord();
-      return;
-    }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        nudge(1);
+      }
 
-    if (!getSelectedChord()) {
-      return;
-    }
+      if (
+        event.key === 'Delete' ||
+        event.key === 'Backspace'
+      ) {
+        event.preventDefault();
+        deleteSelectedChord();
+      }
 
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      nudge(-1);
+      if (event.key === 'Escape') {
+        clearSelectedChord();
+      }
     }
-
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      nudge(1);
-    }
-
-    if (
-      event.key === 'Delete' ||
-      event.key === 'Backspace'
-    ) {
-      event.preventDefault();
-      deleteSelectedChord();
-    }
-
-    if (event.key === 'Escape') {
-      clearSelectedChord();
-    }
-  });
+  );
 
   document.addEventListener(
     'pointerdown',
@@ -2340,11 +2521,14 @@ function getNoteIndex(note) {
           '#paletteBackdrop'
         );
 
-      if (inlineInput && !input) {
-        setTimeout(
-          () => inlineInput?.blur(),
-          0
-        );
+      if (
+        inlineInput &&
+        !input &&
+        !chord
+      ) {
+        setTimeout(() => {
+          inlineInput?.blur();
+        }, 0);
       }
 
       if (
@@ -2372,13 +2556,14 @@ function getNoteIndex(note) {
   );
 
   song = null;
-selectedChordId = null;
-selectedPaletteChord = null;
-mode = 'lyrics';
+  selectedChordId = null;
+  selectedPaletteChord = null;
+  lastChordTap = null;
+  mode = 'lyrics';
 
-els.editor.classList.add('hidden');
-els.home.classList.remove('hidden');
+  els.editor.classList.add('hidden');
+  els.home.classList.remove('hidden');
 
-renderPalette();
-renderHome();
+  renderPalette();
+  renderHome();
 })();
