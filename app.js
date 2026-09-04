@@ -126,6 +126,7 @@
   let saveTimer = null;
   let lyricsBeforeEdit = '';
   let suppressChordActivation = false;
+  let lastChordTap = null;
 
   function normalizeSong(target) {
     if (!target || typeof target !== 'object') {
@@ -568,20 +569,47 @@
 	);
 
         button.addEventListener(
-          'click',
-          event => {
-            event.preventDefault();
-            event.stopPropagation();
+  'click',
+  event => {
+    event.preventDefault();
+    event.stopPropagation();
 
-           
-            if (suppressChordActivation) {
-              suppressChordActivation = false;
-              return;
-            }
+    if (suppressChordActivation) {
+      suppressChordActivation = false;
+      return;
+    }
 
-            selectChord(chord.id);
-          }
-        );
+    const now = Date.now();
+    const isTouch =
+      event.pointerType === 'touch' ||
+      navigator.maxTouchPoints > 0;
+
+    const isDoubleTap =
+      isTouch &&
+      lastChordTap &&
+      lastChordTap.id === chord.id &&
+      now - lastChordTap.time <= 350;
+
+    if (isDoubleTap) {
+      lastChordTap = null;
+
+      showExistingChordInput(
+        row,
+        button,
+        chord
+      );
+
+      return;
+    }
+
+    lastChordTap = {
+      id: chord.id,
+      time: now
+    };
+
+    selectChord(chord.id);
+  }
+);
 
         button.addEventListener(
           'dblclick',
@@ -1345,17 +1373,18 @@ function renderAll() {
     selectedChordId = finished.id;
 
     if (finished.moved) {
-      suppressChordActivation = true;
+  suppressChordActivation = true;
+  lastChordTap = null;
 
-      commit('コード移動');
-      renderAll();
+  commit('コード移動');
+  renderAll();
 
-      setTimeout(() => {
-        suppressChordActivation = false;
-      }, 0);
-    } else {
-      updateMobileControls();
-    }
+  setTimeout(() => {
+    suppressChordActivation = false;
+  }, 0);
+} else {
+  updateMobileControls();
+}
   }
 
   function applyLyrics(text) {
