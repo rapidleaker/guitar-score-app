@@ -779,6 +779,11 @@ select {
   }
 }
 
+@page {
+  size: landscape;
+  margin: 12mm;
+}
+
 @media print {
   .home-header,
   .app-header,
@@ -801,7 +806,11 @@ select {
     display: none !important;
   }
 
+  html,
   body {
+    width: 100%;
+    min-width: 0;
+    overflow: visible !important;
     color: #000;
     background: #fff;
   }
@@ -815,6 +824,7 @@ select {
     display: block !important;
     visibility: visible !important;
     width: 100% !important;
+    max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
@@ -825,11 +835,15 @@ select {
   .preview-line {
     display: block !important;
     position: relative !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    max-width: none !important;
     min-height: 4.2em !important;
     padding-top: 2.2em !important;
     color: #000 !important;
     white-space: pre !important;
     break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .preview-line > .chord {
@@ -838,6 +852,7 @@ select {
     position: absolute !important;
     top: 0 !important;
     color: #000 !important;
+    white-space: nowrap !important;
   }
 
   .lyric-text,
@@ -848,5 +863,13 @@ select {
 
   .sheet .artist {
     color: #000 !important;
+  }
+
+  .preview-line,
+  .preview-line > .chord,
+  .lyric-text,
+  .lyric-char {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
