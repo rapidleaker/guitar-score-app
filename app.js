@@ -239,21 +239,43 @@
     );
 
     target.chords = Array.isArray(target.chords)
-      ? target.chords
-        .map(chord => ({
+  ? target.chords
+      .map(chord => {
+        const lineId = validLineIds.has(
+          chord.lineId
+        )
+          ? chord.lineId
+          : target.lines[0].id;
+
+        const line = target.lines.find(
+          item => item.id === lineId
+        );
+
+        const maxCharIndex = [
+          ...(line?.text || '')
+        ].length;
+
+        const charIndex = clamp(
+          chord.charIndex,
+          0,
+          maxCharIndex,
+          0
+        );
+
+        const offset = Number(chord.offset);
+
+        return {
           id: chord.id || uid('chord'),
           name: String(chord.name || '').trim(),
-          lineId: validLineIds.has(chord.lineId)
-            ? chord.lineId
-            : target.lines[0].id,
-          charIndex: Math.max(
-            0,
-            Number(chord.charIndex) || 0
-          ),
-          offset: Number(chord.offset) || 0
-        }))
-        .filter(chord => chord.name)
-      : [];
+          lineId,
+          charIndex,
+          offset: Number.isFinite(offset)
+            ? offset
+            : 0
+        };
+      })
+      .filter(chord => chord.name)
+  : [];
 
     target.lyricFontSize = clamp(
       target.lyricFontSize,
@@ -455,30 +477,35 @@
   }
 
   function getCharX(row, index) {
-    const chars = row.querySelectorAll(
-      '.lyric-char'
-    );
+  const chars = [
+    ...row.querySelectorAll('.lyric-char')
+  ];
 
-    if (!chars.length) {
-      return 0;
-    }
+  if (!chars.length) {
+    return 0;
+  }
 
-    const rowRect =
-      row.getBoundingClientRect();
+  const rowRect =
+    row.getBoundingClientRect();
 
-    if (index >= chars.length) {
-      return (
-        chars[chars.length - 1]
-          .getBoundingClientRect()
-          .right - rowRect.left
-      );
-    }
+  const target = chars.find(
+    character =>
+      Number(character.dataset.index) === index
+  );
 
+  if (!target) {
     return (
-      chars[index].getBoundingClientRect().left -
-      rowRect.left
+      chars[chars.length - 1]
+        .getBoundingClientRect()
+        .right - rowRect.left
     );
   }
+
+  return (
+    target.getBoundingClientRect().left -
+    rowRect.left
+  );
+}
 
   function getCharIndexAtX(row, clientX) {
     const chars = [
@@ -590,13 +617,18 @@
       charIndex
     );
 
-    const chord = {
-      id: uid('chord'),
-      name: String(name).trim(),
-      lineId,
-      charIndex,
-      offset: clickX - baseX
-    };
+    const safeClickX = Math.max(
+  0,
+  clickX
+);
+
+const chord = {
+  id: uid('chord'),
+  name: String(name).trim(),
+  lineId,
+  charIndex,
+  offset: safeClickX - baseX
+};
 
     if (!chord.name) {
       return;
@@ -911,7 +943,13 @@
     input.type = 'text';
     input.placeholder = 'コード';
     input.autocomplete = 'off';
-    input.style.left = `${clickX}px`;
+    const safeClickX = Math.max(
+  0,
+  clickX
+);
+
+input.style.left =
+  `${safeClickX}px`;
 
     row.appendChild(input);
     input.focus();
@@ -939,7 +977,7 @@
           name,
           lineId,
           charIndex,
-          offset: clickX - baseX
+          offset: safeClickX - baseX
         });
 
         selectedChordId =
@@ -1555,30 +1593,161 @@
       finished.element
     );
   }
+  function reconcileLines(previousLines, text) {
+  const oldLines = Array.isArray(previousLines)
+    ? previousLines
+    : [];
 
-  function applyLyrics(text) {
-    const previousLines =
-      song.lines || [];
+  const newTexts = String(text).split('\n');
 
-    song.lyrics = String(text);
+  const oldCount = oldLines.length;
+  const newCount = newTexts.length;
 
-    song.lines = song.lyrics
-      .split('\n')
-      .map((lineText, index) => ({
-        id:
-          previousLines[index]?.id ||
-          uid('line'),
-        text: lineText
-      }));
+  const dp = Array.from(
+    { length: oldCount + 1 },
+    () => Array(newCount + 1).fill(0)
+  );
 
-    const validLineIds = new Set(
-      song.lines.map(line => line.id)
+  for (let oldIndex = oldCount - 1; oldIndex >= 0; oldIndex--) {
+    for (
+      let newIndex = newCount - 1;
+      newIndex >= 0;
+      newIndex--
+    ) {
+      if (
+        String(oldLines[oldIndex]?.text || '') ===
+        newTexts[newIndex]
+      ) {
+        dp[oldIndex][newIndex] =
+          dp[oldIndex + 1][newIndex + 1] + 1;
+      } else {
+        dp[oldIndex][newIndex] = Math.max(
+          dp[oldIndex + 1][newIndex],
+          dp[oldIndex][newIndex + 1]
+        );
+      }
+    }
+  }
+
+  const matchedOld = new Set();
+  const matchedNew = new Set();
+
+  let oldIndex = 0;
+  let newIndex = 0;
+
+  while (
+    oldIndex < oldCount &&
+    newIndex < newCount
+  ) {
+    if (
+      String(oldLines[oldIndex]?.text || '') ===
+      newTexts[newIndex]
+    ) {
+      matchedOld.add(oldIndex);
+      matchedNew.add(newIndex);
+
+      oldIndex++;
+      newIndex++;
+      continue;
+    }
+
+    if (
+      dp[oldIndex + 1][newIndex] >=
+      dp[oldIndex][newIndex + 1]
+    ) {
+      oldIndex++;
+    } else {
+      newIndex++;
+    }
+  }
+
+  const unusedOldIndexes = [];
+
+  for (
+    let index = 0;
+    index < oldCount;
+    index++
+  ) {
+    if (!matchedOld.has(index)) {
+      unusedOldIndexes.push(index);
+    }
+  }
+
+  const unusedNewIndexes = [];
+
+  for (
+    let index = 0;
+    index < newCount;
+    index++
+  ) {
+    if (!matchedNew.has(index)) {
+      unusedNewIndexes.push(index);
+    }
+  }
+
+  const assignedIds = new Map();
+
+  matchedNew.forEach(index => {
+    const oldLineIndex = [...matchedOld].find(
+      oldPosition => {
+        return (
+          String(oldLines[oldPosition]?.text || '') ===
+          newTexts[index]
+        );
+      }
     );
 
-    song.chords = song.chords.filter(
-      chord => validLineIds.has(chord.lineId)
+    if (oldLineIndex !== undefined) {
+      assignedIds.set(
+        index,
+        oldLines[oldLineIndex].id
+      );
+    }
+  });
+
+  const replacementCount = Math.min(
+    unusedOldIndexes.length,
+    unusedNewIndexes.length
+  );
+
+  for (
+    let index = 0;
+    index < replacementCount;
+    index++
+  ) {
+    const oldLine =
+      oldLines[unusedOldIndexes[index]];
+
+    assignedIds.set(
+      unusedNewIndexes[index],
+      oldLine.id
     );
   }
+
+  return newTexts.map((lineText, index) => ({
+    id: assignedIds.get(index) || uid('line'),
+    text: lineText
+  }));
+}
+
+  function applyLyrics(text) {
+  const previousLines = song.lines || [];
+
+  song.lyrics = String(text);
+
+  song.lines = reconcileLines(
+    previousLines,
+    song.lyrics
+  );
+
+  const validLineIds = new Set(
+    song.lines.map(line => line.id)
+  );
+
+  song.chords = song.chords.filter(
+    chord => validLineIds.has(chord.lineId)
+  );
+}
 
   function updateMeta() {
     const before = JSON.stringify({
@@ -2392,18 +2561,73 @@
     }
   );
 
-  els.print.addEventListener(
-    'click',
-    () => {
-      closeInlineInput();
-      closeMobilePalette();
-      renderPreview();
+  function preparePrintLayout() {
+  const rows = [
+    ...els.previewSheet.querySelectorAll(
+      '.preview-line'
+    )
+  ];
 
-      requestAnimationFrame(() => {
-        window.print();
-      });
+  const availableWidth =
+    els.previewSheet.clientWidth;
+
+  rows.forEach(row => {
+    row.style.transform = '';
+    row.style.transformOrigin =
+      'left top';
+    row.style.height = '';
+
+    const contentWidth = row.scrollWidth;
+
+    if (
+      !availableWidth ||
+      contentWidth <= availableWidth
+    ) {
+      return;
     }
-  );
+
+    const scale =
+      availableWidth / contentWidth;
+
+    row.style.transform =
+      `scale(${scale})`;
+
+    row.style.transformOrigin =
+      'left top';
+
+    row.style.height =
+      `${row.offsetHeight * scale}px`;
+  });
+}
+
+function clearPrintLayout() {
+  els.previewSheet
+    .querySelectorAll('.preview-line')
+    .forEach(row => {
+      row.style.transform = '';
+      row.style.transformOrigin = '';
+      row.style.height = '';
+    });
+}
+
+els.print.addEventListener(
+  'click',
+  () => {
+    closeInlineInput();
+    closeMobilePalette();
+    renderPreview();
+
+    requestAnimationFrame(() => {
+      preparePrintLayout();
+      window.print();
+    });
+  }
+);
+
+window.addEventListener(
+  'afterprint',
+  clearPrintLayout
+);
 
   window.addEventListener(
     'pointermove',
