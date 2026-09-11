@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Guitar Score App｜弾き語りコード譜作成</title>
-  <meta name="description" content="歌詞とコードを組み合わせた弾き語り用コード譜を作成・編集できるWebアプリです。">
+  <meta name="description" content="歌詞とギターコードを組み合わせた弾き語り用コード譜を作成・編集できるWebアプリです。">
   <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
   <section id="homeScreen" class="home-screen">
     <header class="home-header">
@@ -19,321 +18,35 @@
           <a href="legal.html">規約・プライバシー</a>
         </nav>
       </div>
-
-      <button id="newSongBtn" class="primary-button" type="button">
-        ＋ 新しいコード譜を作成
-      </button>
+      <button id="newSongBtn" class="primary-button" type="button">＋ 新しいコード譜を作成</button>
     </header>
-
     <main class="home-main">
-      <div class="home-title-row">
-        <h2>保存したコード譜</h2>
-        <span id="songCount"></span>
-      </div>
-
+      <div class="home-title-row"><h2>保存したコード譜</h2><span id="songCount"></span></div>
       <div id="songList" class="song-list"></div>
-
-      <p id="emptyMessage" class="empty-message hidden">
-        保存したコード譜はありません。
-      </p>
+      <p id="emptyMessage" class="empty-message hidden">保存したコード譜はありません。</p>
     </main>
   </section>
 
   <section id="editorScreen" class="editor-screen hidden">
     <header class="app-header">
-      <div class="editor-title-row">
-        <button id="homeBtn" type="button">← 一覧へ戻る</button>
-        <h1>My Chords</h1>
-      </div>
-
+      <div class="editor-title-row"><button id="homeBtn" type="button">← 一覧へ戻る</button><h1>My Chords</h1></div>
       <div class="song-meta">
-        <label>
-          曲名
-          <input id="titleInput" type="text" placeholder="曲名">
-        </label>
-
-        <label>
-          アーティスト
-          <input id="artistInput" type="text" placeholder="アーティスト名">
-        </label>
-
-        <label>
-          Key
-          <input id="keyInput" type="text" placeholder="例: C">
-        </label>
-
-        <label>
-          Capo
-          <input id="capoInput" type="number" min="0" max="12" value="0">
-        </label>
+        <label>曲名<input id="titleInput" type="text" placeholder="曲名"></label>
+        <label>アーティスト<input id="artistInput" type="text" placeholder="アーティスト名"></label>
+        <label>Key<input id="keyInput" type="text" placeholder="例: C"></label>
+        <label for="capoInput">Capo<input id="capoInput" name="capo" type="number" min="0" max="12" step="1" value="0" inputmode="numeric" aria-label="カポの位置"></label>
       </div>
-
-      <details class="settings-panel">
-        <summary>フォント・サイズ設定</summary>
-
-        <div class="font-options">
-          <div class="font-settings">
-            <label>
-              歌詞フォント
-              <select id="lyricFontFamilyInput">
-                <option value="sans-serif">システム標準</option>
-                <option value="serif">serif</option>
-                <option value="メイリオ">メイリオ</option>
-                <option value="游ゴシック">游ゴシック</option>
-                <option value="Georgia">Georgia</option>
-              </select>
-            </label>
-
-            <label>
-              コードフォント
-              <select id="chordFontFamilyInput">
-                <option value="monospace">monospace</option>
-                <option value="sans-serif">sans-serif</option>
-                <option value="serif">serif</option>
-                <option value="Arial">Arial</option>
-                <option value="Courier New">Courier New</option>
-                <option value="Georgia">Georgia</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="font-size-settings">
-            <label>
-              歌詞サイズ
-              <div class="font-size-control">
-                <input id="lyricFontSizeInput" type="range" min="12" max="32" step="1">
-                <output id="lyricFontSizeValue">13</output>px
-              </div>
-            </label>
-
-            <label>
-              コードサイズ
-              <div class="font-size-control">
-                <input id="chordFontSizeInput" type="range" min="12" max="32" step="1">
-                <output id="chordFontSizeValue">13</output>px
-              </div>
-            </label>
-
-            <button id="resetFontSizeBtn" type="button">
-              サイズを標準に戻す
-            </button>
-          </div>
-        </div>
-      </details>
-
-      <div class="toolbar">
-        <button id="lyricsMode" class="mode active" type="button">
-          歌詞編集
-        </button>
-
-        <button id="chordsMode" class="mode" type="button">
-          コード編集
-        </button>
-
-        <button id="previewMode" class="mode" type="button">
-          プレビュー
-        </button>
-
-        <span class="spacer"></span>
-
-        <button id="undoBtn" type="button">↶ 戻す</button>
-        <button id="redoBtn" type="button">↷ やり直す</button>
-        <button id="printBtn" type="button">印刷</button>
-      </div>
-
+      <details class="settings-panel"><summary>フォント・サイズ設定</summary><div class="font-options"><div class="font-settings"><label>歌詞フォント<select id="lyricFontFamilyInput"><option value="sans-serif">システム標準</option><option value="serif">serif</option><option value="メイリオ">メイリオ</option><option value="游ゴシック">游ゴシック</option><option value="Georgia">Georgia</option></select></label><label>コードフォント<select id="chordFontFamilyInput"><option value="monospace">monospace</option><option value="sans-serif">sans-serif</option><option value="serif">serif</option><option value="Arial">Arial</option><option value="Courier New">Courier New</option><option value="Georgia">Georgia</option></select></label></div><div class="font-size-settings"><label>歌詞サイズ<div class="font-size-control"><input id="lyricFontSizeInput" type="range" min="12" max="32" step="1"><output id="lyricFontSizeValue">13</output>px</div></label><label>コードサイズ<div class="font-size-control"><input id="chordFontSizeInput" type="range" min="12" max="32" step="1"><output id="chordFontSizeValue">13</output>px</div></label><button id="resetFontSizeBtn" type="button">サイズを標準に戻す</button></div></div></details>
+      <div class="toolbar"><button id="lyricsMode" class="mode active" type="button">歌詞編集</button><button id="chordsMode" class="mode" type="button">コード編集</button><button id="previewMode" class="mode" type="button">プレビュー</button><span class="spacer"></span><button id="undoBtn" type="button">↶ 戻す</button><button id="redoBtn" type="button">↷ やり直す</button><button id="printBtn" type="button">印刷</button></div>
       <div id="status" aria-live="polite"></div>
     </header>
-
     <main>
-      <section id="lyricsEditor" class="panel">
-        <label for="lyricsInput" class="section-label">
-          歌詞（改行・空行を保持します）
-        </label>
-
-        <textarea
-          id="lyricsInput"
-          spellcheck="false"
-          placeholder="歌詞を入力または貼り付けてください"
-        ></textarea>
-      </section>
-
-      <section id="chordsEditor" class="panel hidden">
-        <p class="hint">
-          コードを選択してから歌詞をタップ／クリックすると、選択したコードを追加できます。
-          未選択時はコード名を入力できます。
-        </p>
-
-        <div id="chordTools" class="chord-tools">
-          <div class="tool-section palette-section">
-            <h2>コードパレット</h2>
-
-            <div
-              class="palette-tabs"
-              role="tablist"
-              aria-label="コードパレットカテゴリ"
-            >
-              <button
-                type="button"
-                class="palette-tab active"
-                data-palette="basic"
-                role="tab"
-                aria-selected="true"
-              >
-                基本
-              </button>
-
-              <button
-  		type="button"
-		class="palette-tab"
-		data-palette="flat"
-  		role="tab"
-  		aria-selected="false"
-	       >
-  		♭
-	      </button>   
-
-              <button
-                type="button"
-                class="palette-tab"
-                data-palette="minor"
-                role="tab"
-                aria-selected="false"
-              >
-                マイナー
-              </button>
-
-              <button
-                type="button"
-                class="palette-tab"
-                data-palette="seventh"
-                role="tab"
-                aria-selected="false"
-              >
-                7th
-              </button>
-
-              <button
-                type="button"
-                class="palette-tab"
-                data-palette="other"
-                role="tab"
-                aria-selected="false"
-              >
-                その他
-              </button>
-            </div>
-
-            <div
-              id="chordPalette"
-              class="chord-palette"
-              aria-label="コードパレット"
-            ></div>
-
-            <button
-              id="clearPaletteBtn"
-              class="secondary-button"
-              type="button"
-            >
-              選択解除
-            </button>
-
-            <button
-              id="closePaletteBtn"
-              class="secondary-button palette-close-button"
-              type="button"
-            >
-              パレットを閉じる
-            </button>
-          </div>
-
-          <div class="tool-section transposition-tool">
-            <h2>一括移調</h2>
-
-            <div class="transpose-controls">
-              <button
-                id="transposeDownBtn"
-                type="button"
-                aria-label="半音下げる"
-              >
-                −
-              </button>
-
-              <output id="transposeValue">0</output>
-
-              <button
-                id="transposeUpBtn"
-                type="button"
-                aria-label="半音上げる"
-              >
-                ＋
-              </button>
-
-              <button id="resetTransposeBtn" type="button">
-                元に戻す
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div id="paletteBackdrop" class="palette-backdrop hidden"></div>
-
-        <div id="scoreEditor" class="score"></div>
-
-        <div id="mobileControls" class="mobile-controls hidden">
-          <button id="addChordBtn" type="button">
-            ＋コード
-          </button>
-
-          <button id="deleteChordBtn" type="button">
-            削除
-          </button>
-
-          <button id="duplicateChordBtn" type="button">
-            複製
-          </button>
-
-          <button id="nudgeLeftBtn" type="button" aria-label="左へ移動">
-            ←
-          </button>
-
-          <input
-            id="selectedChordName"
-            type="text"
-            aria-label="選択中のコード名"
-          >
-
-          <button id="nudgeRightBtn" type="button" aria-label="右へ移動">
-            →
-          </button>
-
-          <button id="copyChordBtn" type="button">
-            コピー
-          </button>
-
-          <button id="pasteChordBtn" type="button">
-            貼り付け
-          </button>
-        </div>
-      </section>
-
-      <section id="preview" class="panel hidden">
-        <article id="previewSheet" class="sheet"></article>
-      </section>
+      <section id="lyricsEditor" class="panel"><label for="lyricsInput" class="section-label">歌詞（改行・空行を保持します）</label><textarea id="lyricsInput" name="lyrics" aria-label="歌詞入力欄" spellcheck="false" placeholder="歌詞を入力または貼り付けてください"></textarea></section>
+      <section id="chordsEditor" class="panel hidden"><p class="hint">コードを選択してから歌詞をタップ／クリックすると、選択したコードを追加できます。未選択時はコード名を入力できます。</p><div id="chordTools" class="chord-tools"><div class="tool-section palette-section"><h2>コードパレット</h2><div class="palette-tabs" role="tablist" aria-label="コードパレットカテゴリ"><button type="button" class="palette-tab active" data-palette="basic" role="tab" aria-selected="true" aria-controls="chordPalette">基本</button><button type="button" class="palette-tab" data-palette="flat" role="tab" aria-selected="false" aria-controls="chordPalette">♭</button><button type="button" class="palette-tab" data-palette="minor" role="tab" aria-selected="false" aria-controls="chordPalette">マイナー</button><button type="button" class="palette-tab" data-palette="seventh" role="tab" aria-selected="false" aria-controls="chordPalette">7th</button><button type="button" class="palette-tab" data-palette="other" role="tab" aria-selected="false" aria-controls="chordPalette">その他</button></div><div id="chordPalette" class="chord-palette" aria-label="コードパレット"></div><button id="clearPaletteBtn" class="secondary-button" type="button">選択解除</button><button id="closePaletteBtn" class="secondary-button palette-close-button" type="button">パレットを閉じる</button></div><div class="tool-section transposition-tool"><h2>一括移調</h2><div class="transpose-controls"><button id="transposeDownBtn" type="button" aria-label="半音下げる">−</button><output id="transposeValue">0</output><button id="transposeUpBtn" type="button" aria-label="半音上げる">＋</button><button id="resetTransposeBtn" type="button">元に戻す</button></div></div></div><div id="paletteBackdrop" class="palette-backdrop hidden"></div><div id="scoreEditor" class="score"></div><div id="mobileControls" class="mobile-controls hidden" aria-label="選択中コードの操作"><button id="addChordBtn" type="button">＋コード</button><button id="deleteChordBtn" type="button">削除</button><button id="duplicateChordBtn" type="button">複製</button><button id="nudgeLeftBtn" type="button" aria-label="左へ移動">←</button><input id="selectedChordName" type="text" autocomplete="off" spellcheck="false" aria-label="選択中のコード名"><button id="nudgeRightBtn" type="button" aria-label="右へ移動">→</button><button id="copyChordBtn" type="button">コピー</button><button id="pasteChordBtn" type="button">貼り付け</button></div></section>
+      <section id="preview" class="panel hidden"><div class="preview-controls"><button id="addPageBreakBtn" type="button">＋ 改ページを追加</button><span id="previewBreakHint" aria-live="polite">追加ボタンを押してから、行間を選択してください</span></div><article id="previewSheet" class="sheet"></article></section>
     </main>
   </section>
-
-  <footer class="site-footer app-footer">
-    <div>Guitar Score App</div>
-
-    <div class="footer-links">
-      <a href="about.html">このアプリについて</a>
-      <a href="how-to-use.html">使い方</a>
-      <a href="legal.html">規約・プライバシー</a>
-    </div>
-
-    <small>© Guitar Score App</small>
-  </footer>
-
+  <footer class="site-footer app-footer"><div>Guitar Score App</div><div class="footer-links"><a href="about.html">このアプリについて</a><a href="how-to-use.html">使い方</a><a href="legal.html">規約・プライバシー</a></div><small>© Guitar Score App</small></footer>
   <script src="app.js"></script>
 </body>
 </html>
