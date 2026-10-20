@@ -402,8 +402,28 @@ setTimeout(() => {
 return; } if (suppressChordActivation) { suppressChordActivation = false; return; } handleChordTap(chord, finished.currentRow, finished.element); }
   function applyLyrics(text) { song.lyrics = String(text); song.lines = reconcileLines(song.lines, song.lyrics); const valid = new Set(song.lines.map(line => line.id)); song.chords = song.chords.filter(chord => valid.has(chord.lineId)).map(chord => { const line = song.lines.find(item => item.id === chord.lineId); return { ...chord, charIndex: clamp(chord.charIndex, 0, [...(line?.text || '')].length, 0) }; }); song.pageBreakAfter = song.pageBreakAfter.filter(id => valid.has(id) && song.lines.findIndex(line => line.id === id) < song.lines.length - 1); if (currentScoreLineId && !valid.has(currentScoreLineId)) currentScoreLineId = null; if (selectedChordId && !song.chords.some(chord => chord.id === selectedChordId)) selectedChordId = null; }
   function updateMeta() { const before = JSON.stringify({ title: song.title, artist: song.artist, key: song.key, capo: song.capo }); song.title = els.title.value; song.artist = els.artist.value; song.key = els.key.value; song.capo = clamp(els.capo.value, 0, 12, 0); if (before !== JSON.stringify({ title: song.title, artist: song.artist, key: song.key, capo: song.capo })) { commit('曲情報を編集'); renderHome(); } }
-  function updateFontSize(type, value) { const size = clamp(value, 12, 32, DEFAULTS[type]); if (song[type] === size) return; song[type] = size; commit(type === 'lyricFontSize' ? '歌詞サイズ変更' : 'コードサイズ変更'); renderAll(); }
-  function updateFontFamily(type, value) { const family = typeof value === 'string' && value.trim() ? value.trim() : DEFAULTS[type]; if (song[type] === family) return; song[type] = family; commit(type === 'lyricFontFamily' ? '歌詞フォント変更' : 'コードフォント変更'); renderAll(); }
+
+  function updateFontSize(type, value, saveChange = false) {
+  if (!song) return;
+
+  const size = clamp(value, 12, 32, DEFAULTS[type]);
+  const isLyric = type === 'lyricFontSize';
+
+  song[type] = size;
+
+  document.documentElement.style.setProperty(
+    isLyric ? '--lyric-font-size' : '--chord-font-size',
+    `${size}px`
+  );
+
+  (isLyric ? els.lyricSizeValue : els.chordSizeValue)
+    .textContent = size;
+
+  if (saveChange) {
+    commit(isLyric ? '歌詞サイズ変更' : 'コードサイズ変更');
+  }
+}
+
   function resetFontSizes() { song.lyricFontSize = DEFAULTS.lyricFontSize; song.chordFontSize = DEFAULTS.chordFontSize; commit('文字サイズを標準に戻す'); renderAll(); }
   function parseChord(name) { const match = String(name).trim().match(/^([A-Ga-g])([#♯b♭]?)([^/]*?)(?:\/([A-Ga-g])([#♯b♭]?))?$/); if (!match) return null; const root = match[1].toUpperCase() + normalizeAccidental(match[2]); const bass = match[4] ? match[4].toUpperCase() + normalizeAccidental(match[5]) : null; return getNoteIndex(root) === null || bass && getNoteIndex(bass) === null ? null : { root, suffix: match[3] || '', bass }; }
   function transposeNote(note, amount) { const index = getNoteIndex(note); if (index === null) return note; const result = SHARP_NOTES[(index + amount + 120) % 12]; return String(note).includes('b') ? FLAT_NOTES[result] || result : result; }
@@ -439,7 +459,21 @@ return; } if (suppressChordActivation) { suppressChordActivation = false; return
   els.lyrics.onblur = () => { if (song && lyricsBeforeEdit !== song.lyrics) commit('歌詞を編集'); };
   [els.title,els.artist,els.key,els.capo].forEach(input => input.addEventListener('change', updateMeta));
 // 改ページ操作はプレビュー画面の行間ゾーンで行う
-  els.lyricSize.oninput = event => updateFontSize('lyricFontSize', event.target.value); els.chordSize.oninput = event => updateFontSize('chordFontSize', event.target.value); els.lyricFamily.onchange = event => updateFontFamily('lyricFontFamily', event.target.value); els.chordFamily.onchange = event => updateFontFamily('chordFontFamily', event.target.value); els.resetSize.onclick = resetFontSizes; els.copy.onclick = copySelectedChord; els.paste.onclick = pasteChord; els.delete.onclick = deleteSelectedChord; els.duplicate.onclick = duplicateSelectedChord; els.left.onclick = () => nudge(-1); els.right.onclick = () => nudge(1); els.addChord.onclick = openMobilePalette; els.closePalette?.addEventListener('click', closeMobilePalette); els.paletteBackdrop?.addEventListener('click', closeMobilePalette);
+els.lyricSize.oninput = event => {
+  updateFontSize('lyricFontSize', event.target.value);
+};
+
+els.chordSize.oninput = event => {
+  updateFontSize('chordFontSize', event.target.value);
+};
+
+els.lyricSize.onchange = event => {
+  updateFontSize('lyricFontSize', event.target.value, true);
+};
+
+els.chordSize.onchange = event => {
+  updateFontSize('chordFontSize', event.target.value, true);
+};els.lyricFamily.onchange = event => updateFontFamily('lyricFontFamily', event.target.value); els.chordFamily.onchange = event => updateFontFamily('chordFontFamily', event.target.value); els.resetSize.onclick = resetFontSizes; els.copy.onclick = copySelectedChord; els.paste.onclick = pasteChord; els.delete.onclick = deleteSelectedChord; els.duplicate.onclick = duplicateSelectedChord; els.left.onclick = () => nudge(-1); els.right.onclick = () => nudge(1); els.addChord.onclick = openMobilePalette; els.closePalette?.addEventListener('click', closeMobilePalette); els.paletteBackdrop?.addEventListener('click', closeMobilePalette);
   els.selectedName.onchange = () => { const chord = getSelectedChord(); const name = els.selectedName.value.trim(); if (chord && name && name !== chord.name) { chord.name = name; commit('コード名変更'); renderAll(); } };
   els.paletteTabs.forEach(button => button.addEventListener('click', () => { els.paletteTabs.forEach(tab => { tab.classList.remove('active'); tab.setAttribute('aria-selected','false'); }); button.classList.add('active'); button.setAttribute('aria-selected','true'); renderPalette(); }));
   els.clearPalette.onclick = () => { selectedPaletteChord = null; renderPalette(); closeMobilePalette(); }; els.transposeDown.onclick = () => transposeAll(-1); els.transposeUp.onclick = () => transposeAll(1); els.resetTranspose.onclick = () => transposeAll(-(Number(song?.transpose) || 0)); els.modes.lyrics.onclick = () => switchMode('lyrics'); els.modes.chords.onclick = () => switchMode('chords'); els.modes.preview.onclick = () => switchMode('preview');
