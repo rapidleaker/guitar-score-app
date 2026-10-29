@@ -37,7 +37,15 @@
         <label for="capoInput">Capo<input id="capoInput" name="capo" type="number" min="0" max="12" step="1" value="0" inputmode="numeric" aria-label="カポの位置"></label>
       </div>
       <details class="settings-panel"><summary>フォント・サイズ設定</summary><div class="font-options"><div class="font-settings"><label>歌詞フォント<select id="lyricFontFamilyInput"><option value="sans-serif">システム標準</option><option value="serif">serif</option><option value="メイリオ">メイリオ</option><option value="游ゴシック">游ゴシック</option><option value="Georgia">Georgia</option></select></label><label>コードフォント<select id="chordFontFamilyInput"><option value="monospace">monospace</option><option value="sans-serif">sans-serif</option><option value="serif">serif</option><option value="Arial">Arial</option><option value="Courier New">Courier New</option><option value="Georgia">Georgia</option></select></label></div><div class="font-size-settings"><label>歌詞サイズ<div class="font-size-control"><input id="lyricFontSizeInput" type="range" min="12" max="32" step="1"><output id="lyricFontSizeValue">13</output>px</div></label><label>コードサイズ<div class="font-size-control"><input id="chordFontSizeInput" type="range" min="12" max="32" step="1"><output id="chordFontSizeValue">13</output>px</div></label><button id="resetFontSizeBtn" type="button">サイズを標準に戻す</button></div></div></details>
-      <div class="toolbar"><button id="lyricsMode" class="mode active" type="button">歌詞編集</button><button id="chordsMode" class="mode" type="button">コード編集</button><button id="previewMode" class="mode" type="button">プレビュー</button><span class="spacer"></span><button id="undoBtn" type="button">↶ 戻す</button><button id="redoBtn" type="button">↷ やり直す</button><button id="printBtn" type="button">印刷</button></div>
+      <div class="toolbar"><button id="lyricsMode" class="mode active" type="button">歌詞編集</button><button id="chordsMode" class="mode" type="button">コード編集</button><button id="previewMode" class="mode" type="button">プレビュー</button><span class="spacer"></span><button id="undoBtn" type="button">↶ 戻す</button><button id="redoBtn" type="button">↷ やり直す</button><button id="printBtn" type="button">印刷</button>
+<label class="print-layout-control">
+  印刷レイアウト
+  <select id="printLayoutInput">
+    <option value="single">1段</option>
+    <option value="double">2段</option>
+  </select>
+</label>
+</div>
       <div id="status" aria-live="polite"></div>
     </header>
     <main>
