@@ -6,7 +6,7 @@
   const DRAG_THRESHOLD = 5;
   const DUPLICATE_OFFSET = 20;
   const DOUBLE_TAP_DELAY = 400;
-  const DEFAULTS = { lyricFontSize: 13, chordFontSize: 13, lyricFontFamily: 'sans-serif', chordFontFamily: 'monospace' };
+  const DEFAULTS = { lyricFontSize: 15, chordFontSize: 15, lyricFontFamily: 'sans-serif', chordFontFamily: 'monospace' };
   const $ = selector => document.querySelector(selector);
   const clone = value => JSON.parse(JSON.stringify(value));
   const clamp = (value, min, max, fallback) => { const number = Number(value); return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback; };
