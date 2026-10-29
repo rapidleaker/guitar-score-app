@@ -341,31 +341,46 @@ renderAll();
 requestAnimationFrame(() => window.scrollTo(0, scrollY)); }
   function renderChordsOnRow(row, lineId, editable) { song.chords.filter(chord => chord.lineId === lineId).forEach(chord => { const button = document.createElement('button'); button.type = 'button'; button.className = `chord${chord.id === selectedChordId ? ' selected' : ''}`; button.textContent = chord.name; button.dataset.chordId = chord.id; button.style.left = `${getCharX(row, chord.charIndex) + chord.offset}px`; if (!editable) { button.disabled = true; button.style.pointerEvents = 'none'; row.appendChild(button); return; } button.addEventListener('pointerdown', event => { event.preventDefault(); event.stopPropagation(); startDrag(event); }, { passive: false }); button.addEventListener('pointermove', moveDrag, { passive: false }); button.addEventListener('pointerup', event => { event.preventDefault(); event.stopPropagation(); }, { passive: false }); button.addEventListener('pointercancel', event => { event.preventDefault(); event.stopPropagation(); endDrag(event); }, { passive: false }); row.appendChild(button); }); }
   function renderEditor() { els.score.replaceChildren(); song.lines.forEach(line => { const row = createRow(line, true); els.score.appendChild(row); renderChordsOnRow(row, line.id, true); }); }
-  function renderPreview() {
-    els.previewSheet.replaceChildren();
+
+function renderPreview() {
+  els.previewSheet.replaceChildren();
+
+  // 曲名が入力されている場合だけ、曲名欄を作成する
+  if (song.title.trim()) {
     const title = document.createElement('h2');
-    title.textContent = song.title || '無題';
-    const artist = document.createElement('p');
-    artist.className = 'artist';
-    artist.textContent = [song.artist, song.key ? `Key: ${song.key}` : 'Key: 未設定', `Capo: ${song.capo}`].filter(Boolean).join(' / ');
-    const score = document.createElement('div');
-    score.className = 'score preview-score';
-    els.previewSheet.append(title, artist, score);
-    song.lines.forEach((line, index) => {
-  const row = createRow(line, false);
-
-  if (song.pageBreakAfter.includes(line.id)) {
-    row.classList.add('page-break-after');
+    title.textContent = song.title;
+    els.previewSheet.appendChild(title);
   }
 
-  score.appendChild(row);
-  renderChordsOnRow(row, line.id, false);
+  const artist = document.createElement('p');
+  artist.className = 'artist';
+  artist.textContent = [
+    song.artist,
+    song.key ? `Key: ${song.key}` : 'Key: 未設定',
+    `Capo: ${song.capo}`
+  ].filter(Boolean).join(' / ');
 
-  if (index < song.lines.length - 1) {
-    score.appendChild(createPreviewBreakZone(line.id));
-  }
-});
-  }
+  const score = document.createElement('div');
+  score.className = 'score preview-score';
+
+  els.previewSheet.append(artist, score);
+
+  song.lines.forEach((line, index) => {
+    const row = createRow(line, false);
+
+    if (song.pageBreakAfter.includes(line.id)) {
+      row.classList.add('page-break-after');
+    }
+
+    score.appendChild(row);
+    renderChordsOnRow(row, line.id, false);
+
+    if (index < song.lines.length - 1) {
+      score.appendChild(createPreviewBreakZone(line.id));
+    }
+  });
+}
+
   function renderFonts() { const root = document.documentElement; root.style.setProperty('--lyric-font-size', `${song.lyricFontSize}px`); root.style.setProperty('--chord-font-size', `${song.chordFontSize}px`); root.style.setProperty('--lyric-font-family', song.lyricFontFamily); root.style.setProperty('--chord-font-family', song.chordFontFamily); els.lyricSize.value = song.lyricFontSize; els.chordSize.value = song.chordFontSize; els.lyricSizeValue.textContent = song.lyricFontSize; els.chordSizeValue.textContent = song.chordFontSize; els.lyricFamily.value = song.lyricFontFamily; els.chordFamily.value = song.chordFontFamily; }
   function renderTransposeValue() { const value = Number(song?.transpose) || 0; els.transposeValue.textContent = value > 0 ? `+${value}` : String(value); }
   function renderAll() { if (!song) return; normalizeSong(song); els.title.value = song.title; els.artist.value = song.artist; els.key.value = song.key; els.capo.value = song.capo; if (els.lyrics.value !== song.lyrics) els.lyrics.value = song.lyrics; renderFonts(); renderEditor(); renderPreview(); renderPalette(); renderTransposeValue(); updateMode(); updateMobileControls();  }
