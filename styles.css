@@ -1,6 +1,6 @@
 :root{--bg:#f2f7f9;--surface:#fff;--surface-muted:#f7fcfd;--text:#111;--muted:#66757a;--border:#d5e3e7;--accent:#00a9d6;--accent-dark:#238ca8;--accent-light:#e8f8fb;--danger:#c62828;--shadow:0 6px 18px rgba(20,80,95,.08);--lyric-font-size:13px;--chord-font-size:13px;--lyric-font-family:sans-serif;--chord-font-family:monospace}*{box-sizing:border-box}html,body{min-height:100%;margin:0;overflow-x:hidden;color:var(--text);background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,textarea,select{font:inherit}button{min-height:42px;padding:.6rem .95rem;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;touch-action:manipulation}button:hover{border-color:var(--accent);background:var(--accent-light)}button:disabled{opacity:.5;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid rgba(0,169,214,.28);outline-offset:2px}.hidden{display:none!important}.home-screen{min-height:100vh}.home-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px clamp(18px,5vw,64px);border-top:4px solid var(--accent);border-bottom:1px solid #ccc;background:#fff}.home-header h1,.app-header h1{margin:0;font-size:clamp(1.35rem,3vw,1.8rem);font-weight:800}.primary-button{color:#fff;border-color:var(--accent);background:var(--accent);font-weight:700}.home-main,main{width:min(100%,1120px);margin:0 auto;padding:clamp(26px,5vw,58px) clamp(14px,4vw,42px)}.home-title-row{display:flex;align-items:baseline;gap:12px;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid #222}.home-title-row h2{margin:0}#songCount{color:var(--muted);font-size:.9rem}.song-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}.song-card{padding:22px;border:1px solid var(--border);border-radius:6px;background:#fff;box-shadow:var(--shadow)}.song-card h3{margin:0 0 9px}.song-card p{margin:5px 0;color:var(--muted);font-size:.88rem}.song-card-actions{display:flex;gap:8px;margin-top:20px}.song-card-actions button:first-child{flex:1;color:#fff;border-color:var(--accent);background:var(--accent)}.delete-song,#deleteChordBtn{color:var(--danger)}.app-header{padding:max(8px,env(safe-area-inset-top)) clamp(14px,4vw,38px) 8px;border-top:4px solid var(--accent);border-bottom:1px solid #ccc;background:rgba(255,255,255,.97);box-shadow:0 2px 10px rgba(0,0,0,.07)}.editor-title-row{display:flex;align-items:center;gap:10px;min-height:36px;margin-bottom:6px}.editor-title-row h1{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.song-meta{display:grid;grid-template-columns:minmax(180px,2fr) minmax(180px,2fr) 100px 90px;gap:10px;margin-bottom:10px}.song-meta label,.font-settings label,.font-size-settings label{display:grid;gap:5px;color:#555;font-size:.76rem;font-weight:700}input,textarea,select{border:1px solid #cfcfcf;border-radius:5px;color:var(--text);background:#fff}.song-meta input,.font-settings select{width:100%;min-height:40px;padding:.58rem .7rem}.settings-panel{margin-bottom:10px;border:1px solid var(--border);border-radius:6px;background:var(--surface-muted)}.settings-panel summary{padding:9px 14px;font-weight:700;cursor:pointer}.font-options{display:grid;grid-template-columns:minmax(280px,1fr) minmax(360px,1.4fr);gap:18px;padding:12px 14px}.font-settings{display:grid;grid-template-columns:repeat(2,minmax(130px,1fr));gap:10px}.font-size-settings{display:flex;flex-wrap:wrap;align-items:end;gap:14px}.font-size-control{display:flex;align-items:center;gap:8px}.font-size-settings input[type=range]{width:120px;accent-color:var(--accent)}.font-size-settings output{min-width:42px}.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:3px 0}.toolbar .mode.active{color:#fff;border-color:var(--accent);background:var(--accent);font-weight:800}.spacer{flex:1}#status{min-height:.8em;margin-top:3px;color:var(--muted);font-size:.8rem}.panel{min-width:0;padding:clamp(18px,3vw,32px);border:1px solid var(--border);border-radius:6px;background:#fff;box-shadow:var(--shadow)}#lyricsInput{display:block;width:100%;min-height:min(62vh,620px);padding:16px;resize:vertical;font-size:1rem;line-height:1.9;white-space:pre-wrap}.hint{margin:0 0 18px;color:var(--muted);font-size:.88rem;line-height:1.7}.chord-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,.5fr);gap:16px;margin-bottom:20px;padding:14px;border:1px solid var(--border);border-radius:6px;background:var(--surface-muted)}.tool-section h2{margin:0 0 10px;font-size:1rem}.palette-tabs,.chord-palette,.transpose-controls{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.palette-tab.active,.chord-palette button.selected{color:#fff;border-color:var(--accent);background:var(--accent)}.chord-palette button{min-width:52px;min-height:38px;padding:.4rem .65rem;color:var(--accent-dark);font-weight:700}#clearPaletteBtn,#closePaletteBtn,#resetTransposeBtn{min-height:36px;margin-top:8px;padding:.4rem .7rem}.palette-close-button{display:none}.transpose-controls output{min-width:42px;font-weight:800;text-align:center}.score,.sheet{width:100%;overflow-x:auto;overflow-y:visible;padding-bottom:8px;touch-action:manipulation;overscroll-behavior-x:contain}.score-line,.preview-line{position:relative;min-width:max-content;min-height:5.4em;padding-top:2.8em;white-space:pre;font-family:var(--lyric-font-family);font-size:var(--lyric-font-size);line-height:1.8;font-kerning:none}.lyric-text{display:block;min-height:1.8em;white-space:pre}.lyric-char{display:inline-block;white-space:pre}.score-line>.chord,.preview-line>.chord{position:absolute;top:0;left:0;z-index:2;transform:translateX(-50%);white-space:nowrap}.chord{min-width:44px;min-height:38px;padding:7px 9px;border:1px solid transparent;border-radius:5px;color:var(--accent-dark);background:transparent;font-family:var(--chord-font-family);font-size:var(--chord-font-size);font-weight:800;text-align:center;user-select:none;cursor:grab;touch-action:none}.chord:hover,.chord.selected{border-color:var(--accent);background:var(--accent-light)}.inline-chord-input{position:absolute;top:0;z-index:5;width:72px;min-height:38px;padding:6px 8px;border:2px solid var(--accent);text-align:center;transform:translateX(-50%)}.mobile-controls{position:fixed;left:50%;bottom:max(10px,env(safe-area-inset-bottom));z-index:100;display:flex;align-items:center;gap:6px;width:min(720px,calc(100vw - 24px));padding:6px;border:1px solid var(--border);border-radius:6px;background:rgba(255,255,255,.97);box-shadow:0 4px 18px rgba(0,0,0,.18);transform:translateX(-50%)}.mobile-controls input{flex:1 1 auto;min-width:0;min-height:38px;padding:6px;text-align:center}.mobile-controls button{flex:0 0 auto;min-height:38px;padding:.4rem .7rem;white-space:nowrap}.palette-backdrop{display:none}.sheet{overflow:visible}.sheet h2{margin:0}.sheet .artist{margin:5px 0 26px;color:var(--muted)}.app-nav,.footer-links{display:flex;flex-wrap:wrap;gap:8px 14px}.app-nav{margin-top:8px}.app-nav a,.footer-links a{color:var(--accent-dark);text-decoration:none}.site-footer{padding:28px 18px;border-top:1px solid var(--border);color:var(--muted);background:#fff;text-align:center}.footer-links{justify-content:center;margin:10px 0}
 .score-line.page-break-after {
-  margin-bottom: 30px;
+  margin-bottom: 10px;
   border-bottom: 2px dashed var(--accent);
 }
 
@@ -19,9 +19,12 @@
   font-size: .7rem;
   font-weight: 700;
   line-height: 1;
-}@media(min-width:641px){.chord-tools{grid-template-columns:minmax(0,1fr) 220px;align-items:start;gap:14px}.chord-palette{max-height:120px;overflow-y:auto;align-content:flex-start}.transposition-tool{padding-left:14px;border-left:1px solid var(--border)}}@media(max-width:640px){.home-header{align-items:stretch;flex-direction:column;gap:12px;padding:22px 18px}.app-header{padding:8px 12px}.song-meta{grid-template-columns:1fr 1fr;gap:8px}.song-meta label:nth-child(-n+2){grid-column:span 2}.font-options,.chord-tools{grid-template-columns:1fr;gap:10px}.toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.toolbar button{width:100%;min-width:0;padding:.5rem .35rem;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{display:none}main{width:100%;padding:10px}.panel{width:100%;padding:12px}.score-line,.preview-line{width:max-content;min-width:100%}.mobile-controls{left:6px;right:6px;bottom:env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:auto;padding:5px;transform:none}.mobile-controls #addChordBtn{grid-row:1;grid-column:1}.mobile-controls #deleteChordBtn{grid-row:1;grid-column:2}.mobile-controls #duplicateChordBtn{grid-row:1;grid-column:3}.mobile-controls #copyChordBtn{grid-row:1;grid-column:4}.mobile-controls #pasteChordBtn{grid-row:1;grid-column:5}.mobile-controls #nudgeLeftBtn{grid-row:2;grid-column:1}.mobile-controls #selectedChordName{grid-row:2;grid-column:2/5;width:100%;min-width:0;padding:4px;font-size:.78rem;text-align:center}.mobile-controls #nudgeRightBtn{grid-row:2;grid-column:5}.mobile-controls button{width:100%;min-width:0;min-height:34px;padding:.25rem .15rem;font-size:.68rem}.mobile-controls input{min-height:34px}#lyricsEditor,#chordsEditor,#preview{padding-bottom:calc(156px + env(safe-area-inset-bottom))}#chordTools{display:none}#chordTools.mobile-palette-open{position:fixed;left:8px;right:8px;bottom:82px;z-index:111;display:block;max-height:42vh;overflow-y:auto;margin:0;padding:10px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.98);box-shadow:0 4px 20px rgba(0,0,0,.2)}#chordTools.mobile-palette-open .palette-close-button{display:inline-block}#chordTools.mobile-palette-open .transposition-tool{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}#chordPalette{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;width:100%}#chordPalette button{min-width:0;min-height:42px;padding:.35rem}.palette-backdrop{display:none;position:fixed;inset:0;z-index:109;background:rgba(0,0,0,.2)}.palette-backdrop:not(.hidden){display:block}.palette-backdrop.hidden{display:none!important}.palette-tabs{width:100%}.palette-tabs button{flex:1 1 auto;min-width:0;padding-left:.45rem;padding-right:.45rem}.footer-links{flex-direction:column;gap:6px}}
+}
+@media(min-width:641px){.chord-tools{grid-template-columns:minmax(0,1fr) 220px;align-items:start;gap:14px}.chord-palette{max-height:120px;overflow-y:auto;align-content:flex-start}.transposition-tool{padding-left:14px;border-left:1px solid var(--border)}}
 
-@page{size:A4 portrait;margin:12mm}
+@media(max-width:640px){.home-header{align-items:stretch;flex-direction:column;gap:12px;padding:22px 18px}.app-header{padding:8px 12px}.song-meta{grid-template-columns:1fr 1fr;gap:8px}.song-meta label:nth-child(-n+2){grid-column:span 2}.font-options,.chord-tools{grid-template-columns:1fr;gap:10px}.toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.toolbar button{width:100%;min-width:0;padding:.5rem .35rem;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{display:none}main{width:100%;padding:10px}.panel{width:100%;padding:12px}.score-line,.preview-line{width:max-content;min-width:100%}.mobile-controls{left:6px;right:6px;bottom:env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:auto;padding:5px;transform:none}.mobile-controls #addChordBtn{grid-row:1;grid-column:1}.mobile-controls #deleteChordBtn{grid-row:1;grid-column:2}.mobile-controls #duplicateChordBtn{grid-row:1;grid-column:3}.mobile-controls #copyChordBtn{grid-row:1;grid-column:4}.mobile-controls #pasteChordBtn{grid-row:1;grid-column:5}.mobile-controls #nudgeLeftBtn{grid-row:2;grid-column:1}.mobile-controls #selectedChordName{grid-row:2;grid-column:2/5;width:100%;min-width:0;padding:4px;font-size:.78rem;text-align:center}.mobile-controls #nudgeRightBtn{grid-row:2;grid-column:5}.mobile-controls button{width:100%;min-width:0;min-height:34px;padding:.25rem .15rem;font-size:.68rem}.mobile-controls input{min-height:34px}#lyricsEditor,#chordsEditor,#preview{padding-bottom:calc(156px + env(safe-area-inset-bottom))}#chordTools{display:none}#chordTools.mobile-palette-open{position:fixed;left:8px;right:8px;bottom:82px;z-index:111;display:block;max-height:42vh;overflow-y:auto;margin:0;padding:10px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.98);box-shadow:0 4px 20px rgba(0,0,0,.2)}#chordTools.mobile-palette-open .palette-close-button{display:inline-block}#chordTools.mobile-palette-open .transposition-tool{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}#chordPalette{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;width:100%}#chordPalette button{min-width:0;min-height:42px;padding:.35rem}.palette-backdrop{display:none;position:fixed;inset:0;z-index:109;background:rgba(0,0,0,.2)}.palette-backdrop:not(.hidden){display:block}.palette-backdrop.hidden{display:none!important}.palette-tabs{width:100%}.palette-tabs button{flex:1 1 auto;min-width:0;padding-left:.45rem;padding-right:.45rem}.footer-links{flex-direction:column;gap:6px}}
+
+@page{size:A4 portrait;margin:8mm}
 
 @media print{.home-header,.app-header,.site-footer,.app-nav,#lyricsEditor,#chordsEditor,.settings-panel,.toolbar,#status,.hint,.chord-tools,.palette-backdrop,.mobile-controls,button,input,textarea,select,.inline-chord-input{display:none!important}html,body{width:100%;min-width:0;overflow:visible!important;color:#000;background:#fff}main,#preview,#previewSheet,.panel,.sheet,.score{display:block!important;visibility:visible!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;overflow:visible!important}.preview-line{display:block!important;position:relative!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:4.2em!important;padding-top:2.2em!important;overflow:visible!important;color:#000!important;white-space:pre!important;break-inside:avoid;page-break-inside:avoid}.preview-line>.chord{display:block!important;visibility:visible!important;position:absolute!important;top:0!important;color:#000!important;white-space:nowrap!important}.preview-line.page-break-after{break-after:page;page-break-after:always;border-bottom:0!important;margin-bottom:0!important}.score-line.page-break-after::after,.preview-line.page-break-after::after{display:none!important}.lyric-text,.lyric-char{visibility:visible!important;color:#000!important}.sheet .artist{color:#000!important}.preview-line,.preview-line>.chord,.lyric-text,.lyric-char{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 
@@ -113,5 +116,954 @@
     page-break-after: always;
     border-bottom: 0 !important;
     margin-bottom: 0 !important;
+  }
+}
+/* PC版：編集ボタンとコードパレットを一体化 */
+@media (min-width: 641px) {
+  #desktopToolsDock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    max-height: 55vh;
+    overflow-y: auto;
+    padding: 12px 20px;
+
+    background: rgba(247, 252, 253, 0.98);
+    border-top: 1px solid #cbd5e1;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.12);
+  }
+
+  /* 編集ボタンをパレットの上に配置 */
+  #desktopToolsDock #mobileControls {
+    position: static;
+    order: 0;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    justify-content: flex-start;
+  }
+
+  /* コードパレット */
+  #desktopToolsDock #chordTools {
+    position: static;
+    order: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 14px;
+
+    max-height: none;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  #desktopToolsDock #chordTools .palette-section {
+    min-width: 0;
+  }
+
+  #desktopToolsDock #chordTools .chord-palette {
+    max-height: 100px;
+    overflow-y: auto;
+  }
+
+  /* 譜面が固定領域に隠れないようにする */
+  #chordsEditor #scoreEditor {
+    padding-bottom: 56vh;
+  }
+}
+
+/* ========================================
+   Guitar Score App
+   UIデザイン改善：シンプル・清潔感重視
+   既存HTML・JavaScriptとの互換性を維持
+======================================== */
+
+/* ---------- 共通ボタン ---------- */
+
+button {
+  border-radius: 8px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:active:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+button:disabled {
+  box-shadow: none;
+}
+
+/* ---------- PC版：画面下部の固定領域 ---------- */
+
+@media (min-width: 641px) {
+  #desktopToolsDock {
+    gap: 12px;
+    padding: 14px 24px max(14px, env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -5px 22px rgba(30, 75, 90, 0.09);
+    scrollbar-width: thin;
+    scrollbar-color: #cbdde2 transparent;
+  }
+
+  /* パレットと移調操作を独立したカードに */
+  #desktopToolsDock #chordTools {
+    gap: 16px;
+  }
+
+  #desktopToolsDock #chordTools .tool-section {
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+
+  #desktopToolsDock #chordTools .tool-section h2 {
+    margin-bottom:5px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  /* PC版パレットのスクロール領域 */
+  #desktopToolsDock #chordTools .chord-palette {
+    max-height: 96px;
+    gap: 6px;
+    padding: 2px;
+    align-content: flex-start;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbdde2 transparent;
+  }
+
+  /* 一括移調エリア */
+  #desktopToolsDock #chordTools .transposition-tool {
+    padding-left: 14px;
+    border-left: 1px solid var(--border);
+  }
+
+  #desktopToolsDock .transpose-controls {
+    gap: 6px;
+  }
+
+  #desktopToolsDock .transpose-controls button {
+    min-width: 38px;
+    min-height: 38px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+  }
+
+  #desktopToolsDock #resetTransposeBtn {
+    margin-top: 8px;
+  }
+
+  /* 固定領域内のスクロールバー */
+  #desktopToolsDock::-webkit-scrollbar,
+  #desktopToolsDock .chord-palette::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #desktopToolsDock::-webkit-scrollbar-thumb,
+  #desktopToolsDock .chord-palette::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #cbdde2;
+  }
+
+  /* 譜面が固定領域に隠れないよう余白を確保 */
+  #chordsEditor #scoreEditor {
+    padding-bottom: 56vh;
+  }
+}
+
+/* ---------- コードパレットのカテゴリタブ ---------- */
+
+.palette-tabs {
+  gap: 5px;
+  margin-bottom: 10px;
+  padding: 4px;
+  border: 1px solid #e5eef1;
+  border-radius: 9px;
+  background: #f4f9fa;
+}
+
+.palette-tabs .palette-tab {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.palette-tabs .palette-tab:hover:not(:disabled) {
+  color: var(--accent-dark);
+  border-color: #d7edf2;
+  background: #fff;
+}
+
+.palette-tabs .palette-tab.active {
+  color: #fff;
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+  box-shadow: 0 1px 3px rgba(20, 80, 95, 0.12);
+}
+
+/* ---------- コードボタン ---------- */
+
+.chord-palette {
+  gap: 6px;
+}
+
+.chord-palette button {
+  min-width: 52px;
+  min-height: 40px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--accent-dark);
+  background: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.chord-palette button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.chord-palette button.selected {
+  color: #fff;
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+  box-shadow: 0 1px 3px rgba(20, 80, 95, 0.16);
+}
+
+/* ---------- 選択解除・パレットを閉じる ---------- */
+
+#clearPaletteBtn,
+#closePaletteBtn,
+#resetTransposeBtn {
+  min-height: 34px;
+  padding: 6px 11px;
+  border-radius: 7px;
+  color: var(--muted);
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+#clearPaletteBtn:hover,
+#closePaletteBtn:hover,
+#resetTransposeBtn:hover {
+  color: var(--accent-dark);
+  background: var(--accent-light);
+}
+
+/* ---------- 譜面上に配置したコード ---------- */
+
+.chord {
+  border-radius: 7px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.chord:hover {
+  border-color: #b8e5ef;
+  background: var(--accent-light);
+}
+
+.chord.selected {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  box-shadow: 0 0 0 1px rgba(0, 169, 214, 0.08);
+}
+
+/* ---------- 編集操作バー ---------- */
+
+#mobileControls {
+  gap: 6px;
+  padding: 7px;
+  border: 1px solid #d5e3e7;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 5px 20px rgba(20, 80, 95, 0.14);
+}
+
+#mobileControls button {
+  border-radius: 7px;
+  font-weight: 700;
+}
+
+#mobileControls input {
+  border-color: var(--border);
+  border-radius: 7px;
+}
+
+#mobileControls input:focus {
+  border-color: var(--accent);
+}
+
+/* 追加：控えめなアクセントカラー */
+#mobileControls #addChordBtn {
+  color: #fff;
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+}
+
+#mobileControls #addChordBtn:hover:not(:disabled) {
+  background: #187a94;
+}
+
+/* 削除：誤操作を防ぐため赤色は控えめに */
+#mobileControls #deleteChordBtn {
+  color: var(--danger);
+  border-color: #efd6d6;
+  background: #fffafa;
+}
+
+#mobileControls #deleteChordBtn:hover:not(:disabled) {
+  border-color: #d99a9a;
+  background: #fff0f0;
+}
+
+/* コピー・貼り付けの視認性 */
+#mobileControls #copyChordBtn,
+#mobileControls #pasteChordBtn {
+  border-color: #d5e8ed;
+  color: var(--accent-dark);
+  background: #f4fafb;
+}
+
+/* ---------- スマホ版 ---------- */
+
+@media (max-width: 640px) {
+  /* 現在の2段配置と固定位置を維持 */
+  #mobileControls {
+    gap: 5px;
+    padding: 7px;
+    border-radius: 11px;
+    box-shadow: 0 4px 16px rgba(20, 80, 95, 0.16);
+  }
+
+  #mobileControls button {
+    min-width: 0;
+    min-height: 36px;
+    padding: 4px 2px;
+    border-radius: 7px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  #mobileControls input {
+    min-height: 36px;
+    padding: 4px;
+    border-radius: 7px;
+    font-size: 0.8rem;
+    background: #f8fbfc;
+  }
+
+  /* スマホ用パレット */
+  #chordTools.mobile-palette-open {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.99);
+    box-shadow: 0 5px 22px rgba(20, 80, 95, 0.18);
+  }
+
+  #chordTools.mobile-palette-open .tool-section {
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #fff;
+  }
+
+  #chordTools.mobile-palette-open .tool-section h2 {
+    margin-bottom: 9px;
+    font-size: 0.9rem;
+  }
+
+  #chordTools.mobile-palette-open .palette-tabs {
+    gap: 3px;
+    padding: 3px;
+  }
+
+  #chordTools.mobile-palette-open .palette-tabs button {
+    min-height: 35px;
+    padding: 5px 2px;
+    font-size: 0.76rem;
+  }
+
+  #chordPalette {
+    gap: 6px;
+  }
+
+  #chordPalette button {
+    min-width: 0;
+    min-height: 42px;
+    padding: 5px 2px;
+    border-radius: 7px;
+    font-size: 0.84rem;
+  }
+
+  #chordTools.mobile-palette-open .transposition-tool {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* 背景を暗くしすぎず、譜面との区別をつける */
+  .palette-backdrop:not(.hidden) {
+    background: rgba(24, 48, 58, 0.22);
+  }
+}
+
+/* ---------- キーボード操作時の視認性 ---------- */
+
+.palette-tabs button:focus-visible,
+.chord-palette button:focus-visible,
+#mobileControls button:focus-visible {
+  outline: 3px solid rgba(0, 169, 214, 0.3);
+  outline-offset: 2px;
+}
+
+/* ---------- 印刷時はツールバーを表示しない ---------- */
+
+@media print {
+  #desktopToolsDock,
+  #paletteBackdrop {
+    display: none !important;
+  }
+}
+
+
+
+/* PC版：固定ツールバーの横幅を850pxに制限 */
+@media (min-width: 641px) {
+  #desktopToolsDock {
+    align-items: center;
+    padding: 10px 16px;
+    gap: 8px;
+  }
+
+  /* ツールバーの中身を中央に配置 */
+  #desktopToolsDock #chordTools {
+    width: 100%;
+    max-width: 850px;
+    margin-left: auto;
+    margin-right: auto;
+
+    /* コードパレットと移調操作の比率 */
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 12px;
+  }
+
+  /* セクション内の余白のみ調整 */
+  #desktopToolsDock #chordTools .tool-section {
+    padding: 10px 12px;
+    border-radius: 9px;
+  }
+
+  #desktopToolsDock #chordTools .tool-section h2 {
+    margin-bottom: 8px;
+  }
+
+  /* タブの横方向の間隔を調整 */
+  #desktopToolsDock .palette-tabs {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  #desktopToolsDock .palette-tabs .palette-tab {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  /* ボタンのサイズは既存設定を維持 */
+  #desktopToolsDock #chordTools .chord-palette {
+    gap: 5px;
+    max-height: 100px;
+  }
+
+  #desktopToolsDock .chord-palette button {
+    min-height: 36px;
+    padding: 5px 9px;
+  }
+
+  #desktopToolsDock .transpose-controls {
+    gap: 5px;
+  }
+
+  #desktopToolsDock .transpose-controls button {
+    min-height: 36px;
+    padding: 5px 9px;
+  }
+}
+
+/* 画面幅が狭いPCでは移調エリアを少しだけ縮める */
+@media (min-width: 641px) and (max-width: 900px) {
+  #desktopToolsDock #chordTools {
+    grid-template-columns: minmax(0, 1fr) 190px;
+  }
+}
+
+
+/* PC版：選択中コードの操作欄をコンパクトにする */
+@media (min-width: 641px) {
+  #desktopToolsDock #mobileControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 8px;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 850px;
+  }
+
+  /* ＋コード・削除・複製・移動・コピー・貼り付け */
+  #desktopToolsDock #mobileControls button {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 4px 9px;
+    font-size: 0.82rem;
+    line-height: 1.2;
+  }
+
+  /* 選択中コード名の入力欄 */
+  #desktopToolsDock #selectedChordName {
+    flex: 0 1 110px;
+    width: 110px;
+    min-width: 70px;
+    max-width: 130px;
+    min-height: 30px;
+    padding: 4px 7px;
+    font-size: 0.85rem;
+    box-sizing: border-box;
+  }
+}
+
+/* ---------- PC版レイアウト調整：パレット＋1行操作バー ---------- */
+@media (min-width: 641px) {
+  #desktopToolsDock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px max(14px, env(safe-area-inset-bottom));
+  }
+
+  /* コードパレットを上段に広く配置 */
+  #desktopToolsDock #chordTools {
+    order: 0;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 12px;
+  }
+
+  /* 操作ボタンはパレットの下にまとめ、矢印も同じ行に */
+  #desktopToolsDock #mobileControls {
+    order: 1;
+    position: static;
+    transform: none;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 4px 0;
+    overflow-x: auto;
+  }
+
+  /* PCではコードをパレットから選べるため「＋コード」は非表示 */
+  #desktopToolsDock #addChordBtn {
+    display: none !important;
+  }
+
+  #desktopToolsDock #mobileControls button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  #desktopToolsDock #selectedChordName {
+    flex: 0 1 110px;
+    width: 110px;
+    min-width: 80px;
+    max-width: 130px;
+    box-sizing: border-box;
+  }
+
+  #desktopToolsDock #chordTools .tool-section {
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 9px;
+  }
+
+  #desktopToolsDock #chordTools .tool-section h2 {
+    margin-bottom: 8px;
+  }
+
+  #desktopToolsDock #chordTools .chord-palette {
+    max-height: 100px;
+    overflow-y: auto;
+  }
+
+  #chordsEditor #scoreEditor {
+    padding-bottom: 56vh;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  #desktopToolsDock #chordTools {
+    grid-template-columns: minmax(0, 1fr) 180px;
+  }
+}
+
+
+/* =====================================================
+   PC版：左側固定のコードパレット＋キー変更パネル
+   スマホ版の既存レイアウトには変更を加えない
+===================================================== */
+@media (min-width: 641px) {
+  :root {
+    --desktop-sidebar-width: clamp(210px, 23vw, 270px);
+  }
+
+  /* 親要素の下部固定レイアウトを解除し、子要素を個別に固定 */
+  #desktopToolsDock {
+    position: static;
+    display: contents;
+  }
+
+  /* 左側：画面スクロール中も表示し続けるパネル */
+  #desktopToolsDock #chordTools {
+    position: fixed;
+    top: 12px;
+    bottom: 12px;
+    left: 12px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    width: var(--desktop-sidebar-width);
+    max-width: none;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 4px 18px rgba(30, 75, 90, 0.10);
+    scrollbar-width: thin;
+  }
+
+  /* パレットは上側、キー変更はその下に縦並び */
+  #desktopToolsDock #chordTools .tool-section {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+  }
+
+  #desktopToolsDock #chordTools .palette-section {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 6px;
+  }
+
+  #desktopToolsDock #chordTools .palette-section h2 {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.92rem;
+  }
+
+  #desktopToolsDock #chordTools #clearPaletteBtn {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    min-height: 30px;
+    margin: 0;
+    padding: 4px 7px;
+    font-size: 0.72rem;
+  }
+
+  #desktopToolsDock #chordTools .palette-tabs {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    margin: 0;
+    padding: 3px;
+  }
+
+  #desktopToolsDock #chordTools .palette-tabs .palette-tab {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 32px;
+    padding: 5px 6px;
+    font-size: 0.75rem;
+  }
+
+  #desktopToolsDock #chordTools .chord-palette {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    min-width: 0;
+    min-height: 100px;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 3px;
+  }
+
+  #desktopToolsDock #chordTools .chord-palette button {
+    flex: 0 1 auto;
+    min-width: 48px;
+    max-width: 100%;
+    min-height: 36px;
+    padding: 5px 8px;
+    font-size: 0.82rem;
+  }
+
+  #desktopToolsDock #chordTools #closePaletteBtn {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    justify-self: start;
+    margin: 0;
+  }
+
+  /* キー変更はパレットの下に配置 */
+  #desktopToolsDock #chordTools .transposition-tool {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 12px 10px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface);
+  }
+
+  #desktopToolsDock #chordTools .transposition-tool h2 {
+    margin: 0 0 10px;
+    text-align: center;
+  }
+
+  #desktopToolsDock .transpose-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  #desktopToolsDock .transpose-controls button {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 5px 8px;
+  }
+
+  #desktopToolsDock #resetTransposeBtn {
+    margin-top: 0;
+  }
+
+  /* 下部：コード編集操作バーだけを画面中央に固定 */
+  #desktopToolsDock #mobileControls {
+    position: fixed;
+    left: calc(var(--desktop-sidebar-width) + (100vw - var(--desktop-sidebar-width)) / 2);
+    right: auto;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 1001;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: min(1000px, calc(100vw - var(--desktop-sidebar-width) - 36px));
+    max-width: none;
+    margin: 0;
+    padding: 7px;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 4px 18px rgba(20, 80, 95, 0.14);
+    transform: translateX(-50%);
+  }
+
+  #desktopToolsDock #addChordBtn {
+    display: none !important;
+  }
+
+  #desktopToolsDock #mobileControls button {
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 4px 9px;
+    white-space: nowrap;
+    font-size: 0.8rem;
+  }
+
+  #desktopToolsDock #selectedChordName {
+    flex: 0 1 110px;
+    width: 110px;
+    min-width: 70px;
+    max-width: 130px;
+    min-height: 32px;
+    padding: 4px 7px;
+  }
+
+
+  #chordsEditor #scoreEditor {
+    padding-bottom: 90px;
+  }
+}
+
+/* PC版：左側パネルの縦幅をコンパクトにする */
+@media (min-width: 641px) {
+
+  /* ヘッダーと重ならない位置に固定 */
+  #desktopToolsDock #chordTools {
+    top: 350px;
+    bottom: auto;
+    height: auto;
+    max-height: calc(100vh - 125px);
+    overflow-y: auto;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  /* コードパレットを内容に合わせた高さにする */
+  #desktopToolsDock #chordTools .palette-section {
+    flex: 0 0 auto;
+    grid-template-rows: auto auto auto auto;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  /* コード一覧の高さを制限し、内部でスクロール */
+  #desktopToolsDock #chordTools .chord-palette {
+    min-height: 0;
+    height: auto;
+    max-height: 220px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    align-content: flex-start;
+  }
+
+  /* キー変更エリアの余白を縮める */
+  #desktopToolsDock #chordTools .transposition-tool {
+    flex: 0 0 auto;
+    padding: 8px;
+  }
+
+  #desktopToolsDock #chordTools .transposition-tool h2 {
+    margin-bottom: 6px;
+  }
+
+  #desktopToolsDock #chordTools #clearPaletteBtn,
+  #desktopToolsDock #chordTools #closePaletteBtn {
+    margin-top: 0;
+  }
+}
+
+/* PC版：譜面エリアを残りの表示幅の中央に配置 */
+@media (min-width: 641px) {
+  #chordsEditor #scoreEditor {
+    width: 100%;
+    max-width: 1120px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #chordsEditor #scoreEditor .score {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+
+/* PC版：歌詞編集・プレビューを画面中央に配置 */
+@media (min-width: 641px) {
+
+  /* mainの右寄り配置を解除 */
+  body:has(#desktopToolsDock) main {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* 歌詞領域を中央に配置 */
+  #lyricsEditor,
+  #preview {
+    width: 100%;
+    max-width: 1300px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+}
+/* PC版：コード編集画面のみ左側にコードパレット分の余白を確保 */
+@media (min-width: 641px) {
+  body:has(#desktopToolsDock) #chordsEditor {
+    width: calc(100% - var(--desktop-sidebar-width) - 12px);
+    margin-left: calc(var(--desktop-sidebar-width) + 12px);
+    margin-right: 0;
+  }
+
+  body:has(#desktopToolsDock) #chordsEditor #scoreEditor {
+    width: 100%;
+    max-width: 1120px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
