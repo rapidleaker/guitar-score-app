@@ -16,7 +16,7 @@
   const FLAT_NOTES = {'C#':'Db','D#':'Eb','F#':'Gb','G#':'Ab','A#':'Bb'};
   const NOTE_INDEX = {C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11};
   const els = {
-    home: $('#homeScreen'), editor: $('#editorScreen'), songList: $('#songList'), songCount: $('#songCount'), empty: $('#emptyMessage'), newSong: $('#newSongBtn'), homeBtn: $('#homeBtn'), title: $('#titleInput'), artist: $('#artistInput'), key: $('#keyInput'), capo: $('#capoInput'), lyrics: $('#lyricsInput'), score: $('#scoreEditor'), preview: $('#preview'), previewSheet: $('#previewSheet'), addPageBreak: $('#addPageBreakBtn'), previewBreakHint: $('#previewBreakHint'), lyricsEditor: $('#lyricsEditor'), chordsEditor: $('#chordsEditor'), chordTools: $('#chordTools'), palette: $('#chordPalette'), paletteTabs: [...document.querySelectorAll('.palette-tab')], clearPalette: $('#clearPaletteBtn'), closePalette: $('#closePaletteBtn'), paletteBackdrop: $('#paletteBackdrop'), mobile: $('#mobileControls'), addChord: $('#addChordBtn'), selectedName: $('#selectedChordName'), delete: $('#deleteChordBtn'), duplicate: $('#duplicateChordBtn'), left: $('#nudgeLeftBtn'), right: $('#nudgeRightBtn'), copy: $('#copyChordBtn'), paste: $('#pasteChordBtn'), transposeDown: $('#transposeDownBtn'), transposeUp: $('#transposeUpBtn'), transposeValue: $('#transposeValue'), resetTranspose: $('#resetTransposeBtn'), undo: $('#undoBtn'), redo: $('#redoBtn'), pageBreak: $('#pageBreakBtn'), print: $('#printBtn'), status: $('#status'), lyricSize: $('#lyricFontSizeInput'), chordSize: $('#chordFontSizeInput'), lyricSizeValue: $('#lyricFontSizeValue'), chordSizeValue: $('#chordFontSizeValue'), lyricFamily: $('#lyricFontFamilyInput'), chordFamily: $('#chordFontFamilyInput'), resetSize: $('#resetFontSizeBtn'), modes: { lyrics: $('#lyricsMode'), chords: $('#chordsMode'), preview: $('#previewMode') }
+    home: $('#homeScreen'), editor: $('#editorScreen'), songList: $('#songList'), songCount: $('#songCount'), empty: $('#emptyMessage'), newSong: $('#newSongBtn'), homeBtn: $('#homeBtn'), title: $('#titleInput'), artist: $('#artistInput'), key: $('#keyInput'), capo: $('#capoInput'), lyrics: $('#lyricsInput'), score: $('#scoreEditor'), preview: $('#preview'), previewSheet: $('#previewSheet'), addPageBreak: $('#addPageBreakBtn'), previewBreakHint: $('#previewBreakHint'), lyricsEditor: $('#lyricsEditor'), chordsEditor: $('#chordsEditor'), chordTools: $('#chordTools'), palette: $('#chordPalette'), paletteTabs: [...document.querySelectorAll('.palette-tab')], clearPalette: $('#clearPaletteBtn'), closePalette: $('#closePaletteBtn'), paletteBackdrop: $('#paletteBackdrop'), mobile: $('#mobileControls'), addChord: $('#addChordBtn'), selectedName: $('#selectedChordName'), delete: $('#deleteChordBtn'), duplicate: $('#duplicateChordBtn'), left: $('#nudgeLeftBtn'), right: $('#nudgeRightBtn'), copy: $('#copyChordBtn'), paste: $('#pasteChordBtn'), transposeDown: $('#transposeDownBtn'), transposeUp: $('#transposeUpBtn'), transposeValue: $('#transposeValue'), resetTranspose: $('#resetTransposeBtn'), undo: $('#undoBtn'), redo: $('#redoBtn'), pageBreak: $('#pageBreakBtn'),printLayout: $('#printLayoutInput'), print: $('#printBtn'), status: $('#status'), lyricSize: $('#lyricFontSizeInput'), chordSize: $('#chordFontSizeInput'), lyricSizeValue: $('#lyricFontSizeValue'), chordSizeValue: $('#chordFontSizeValue'), lyricFamily: $('#lyricFontFamilyInput'), chordFamily: $('#chordFontFamilyInput'), resetSize: $('#resetFontSizeBtn'), modes: { lyrics: $('#lyricsMode'), chords: $('#chordsMode'), preview: $('#previewMode') }
   };
   let store = loadStore();
   let song = null;
@@ -494,7 +494,44 @@ els.chordSize.onchange = event => {
   els.clearPalette.onclick = () => { selectedPaletteChord = null; renderPalette(); closeMobilePalette(); }; els.transposeDown.onclick = () => transposeAll(-1); els.transposeUp.onclick = () => transposeAll(1); els.resetTranspose.onclick = () => transposeAll(-(Number(song?.transpose) || 0)); els.modes.lyrics.onclick = () => switchMode('lyrics'); els.modes.chords.onclick = () => switchMode('chords'); els.modes.preview.onclick = () => switchMode('preview');
   els.undo.onclick = () => { if (historyIndex <= 0) return; song = clone(history[--historyIndex].song); normalizeSong(song); if (!song.chords.some(chord => chord.id === selectedChordId)) selectedChordId = null; if (!song.lines.some(line => line.id === currentScoreLineId)) currentScoreLineId = getSelectedChord()?.lineId || null; replaceCurrentSong(); renderAll(); updateHistoryButtons(); };
   els.redo.onclick = () => { if (historyIndex >= history.length - 1) return; song = clone(history[++historyIndex].song); normalizeSong(song); if (!song.chords.some(chord => chord.id === selectedChordId)) selectedChordId = null; if (!song.lines.some(line => line.id === currentScoreLineId)) currentScoreLineId = getSelectedChord()?.lineId || null; replaceCurrentSong(); renderAll(); updateHistoryButtons(); };
-  els.print.onclick = () => { closeInlineInput(); closeMobilePalette(); renderPreview(); requestAnimationFrame(() => { preparePrintLayout(); window.print(); }); }; window.addEventListener('afterprint', clearPrintLayout); window.addEventListener('pointermove', moveDrag, { passive: false });
+  
+
+els.print.onclick = () => {
+  closeInlineInput();
+  closeMobilePalette();
+
+  // 印刷前の画面を記録
+  const previousMode = mode;
+
+  // どの編集画面からでもプレビューを表示して印刷する
+  mode = 'preview';
+  updateMode();
+  renderPreview();
+
+  // 選択されている印刷レイアウトを反映
+  const layout = document.querySelector('#printLayoutInput')?.value;
+  document.body.classList.toggle(
+    'print-two-column',
+    layout === 'double'
+  );
+
+  // プレビューの描画後にコードの幅を調整して印刷
+  window.addEventListener('afterprint', () => {
+    clearPrintLayout();
+    document.body.classList.remove('print-two-column');
+
+    // 印刷前の画面に戻す
+    mode = previousMode;
+    updateMode();
+  }, { once: true });
+
+  requestAnimationFrame(() => {
+    preparePrintLayout();
+    window.print();
+  });
+};
+
+window.addEventListener('afterprint', clearPrintLayout); window.addEventListener('pointermove', moveDrag, { passive: false });
 window.addEventListener('pointermove', movePreviewBreakDrag, { passive: false });
 window.addEventListener('pointerup', event => {
     endDrag(event);
