@@ -342,6 +342,7 @@ requestAnimationFrame(() => window.scrollTo(0, scrollY)); }
   function renderChordsOnRow(row, lineId, editable) { song.chords.filter(chord => chord.lineId === lineId).forEach(chord => { const button = document.createElement('button'); button.type = 'button'; button.className = `chord${chord.id === selectedChordId ? ' selected' : ''}`; button.textContent = chord.name; button.dataset.chordId = chord.id; button.style.left = `${getCharX(row, chord.charIndex) + chord.offset}px`; if (!editable) { button.disabled = true; button.style.pointerEvents = 'none'; row.appendChild(button); return; } button.addEventListener('pointerdown', event => { event.preventDefault(); event.stopPropagation(); startDrag(event); }, { passive: false }); button.addEventListener('pointermove', moveDrag, { passive: false }); button.addEventListener('pointerup', event => { event.preventDefault(); event.stopPropagation(); }, { passive: false }); button.addEventListener('pointercancel', event => { event.preventDefault(); event.stopPropagation(); endDrag(event); }, { passive: false }); row.appendChild(button); }); }
   function renderEditor() { els.score.replaceChildren(); song.lines.forEach(line => { const row = createRow(line, true); els.score.appendChild(row); renderChordsOnRow(row, line.id, true); }); }
 
+
 function renderPreview() {
   els.previewSheet.replaceChildren();
 
@@ -369,31 +370,59 @@ function renderPreview() {
   const twoColumn = document.body.classList.contains('print-two-column');
 
   if (twoColumn) {
-    const leftColumn = document.createElement('div');
-    leftColumn.className = 'preview-column preview-column-left';
+    // 手動改ページの位置でページごとに分割する
+    const pages = [];
+    let currentPageLines = [];
 
-    const rightColumn = document.createElement('div');
-    rightColumn.className = 'preview-column preview-column-right';
+    song.lines.forEach(line => {
+      currentPageLines.push(line);
 
-    // 行数を半分に分ける
-    const splitIndex = Math.ceil(song.lines.length / 2);
-
-    song.lines.forEach((line, index) => {
-      const row = createRow(line, false);
-
+      // この行の後に改ページが指定されていたら、
+      // この行までを現在のページにする
       if (song.pageBreakAfter.includes(line.id)) {
-        row.classList.add('page-break-after');
+        pages.push(currentPageLines);
+        currentPageLines = [];
       }
-
-      const targetColumn = index < splitIndex
-        ? leftColumn
-        : rightColumn;
-
-      targetColumn.appendChild(row);
-      renderChordsOnRow(row, line.id, false);
     });
 
-    score.append(leftColumn, rightColumn);
+    // 最後に残った行があれば追加する
+    if (currentPageLines.length > 0) {
+      pages.push(currentPageLines);
+    }
+
+    // ページごとに左右2段を作成する
+    pages.forEach((pageLines, pageIndex) => {
+      const page = document.createElement('div');
+      page.className = 'preview-page';
+
+      const columns = document.createElement('div');
+      columns.className = 'preview-page-columns';
+
+      const leftColumn = document.createElement('div');
+      leftColumn.className = 'preview-column preview-column-left';
+
+      const rightColumn = document.createElement('div');
+      rightColumn.className = 'preview-column preview-column-right';
+
+      // 左段を上から下まで配置し、その後に右段へ続ける
+      const splitIndex = Math.ceil(pageLines.length / 2);
+
+      pageLines.forEach((line, index) => {
+        const row = createRow(line, false);
+
+        const targetColumn = index < splitIndex
+          ? leftColumn
+          : rightColumn;
+
+        targetColumn.appendChild(row);
+        renderChordsOnRow(row, line.id, false);
+      });
+
+      columns.append(leftColumn, rightColumn);
+      page.appendChild(columns);
+      score.appendChild(page);
+    });
+
     return;
   }
 
@@ -413,6 +442,7 @@ function renderPreview() {
     }
   });
 }
+
   function renderFonts() { const root = document.documentElement; root.style.setProperty('--lyric-font-size', `${song.lyricFontSize}px`); root.style.setProperty('--chord-font-size', `${song.chordFontSize}px`); root.style.setProperty('--lyric-font-family', song.lyricFontFamily); root.style.setProperty('--chord-font-family', song.chordFontFamily); els.lyricSize.value = song.lyricFontSize; els.chordSize.value = song.chordFontSize; els.lyricSizeValue.textContent = song.lyricFontSize; els.chordSizeValue.textContent = song.chordFontSize; els.lyricFamily.value = song.lyricFontFamily; els.chordFamily.value = song.chordFontFamily; }
   function renderTransposeValue() { const value = Number(song?.transpose) || 0; els.transposeValue.textContent = value > 0 ? `+${value}` : String(value); }
   function renderAll() { if (!song) return; normalizeSong(song); els.title.value = song.title; els.artist.value = song.artist; els.key.value = song.key; els.capo.value = song.capo; if (els.lyrics.value !== song.lyrics) els.lyrics.value = song.lyrics; renderFonts(); renderEditor(); renderPreview(); renderPalette(); renderTransposeValue(); updateMode(); updateMobileControls();  }
@@ -483,7 +513,14 @@ return; } if (suppressChordActivation) { suppressChordActivation = false; return
   function showHome() { closeInlineInput(); if (dragState) endDrag(); closeMobilePalette(); persist(); els.editor.classList.add('hidden'); els.home.classList.remove('hidden'); renderHome(); }
   function duplicateSong(id) { const source = store.songs.find(item => item.id === id); if (!source) return; const copied = clone(source); const map = new Map(); copied.id = uid('song'); copied.title = `${source.title || '無題'} のコピー`; copied.updatedAt = Date.now(); copied.lines.forEach(line => { const old = line.id; line.id = uid('line'); map.set(old, line.id); }); copied.chords.forEach(chord => { chord.id = uid('chord'); chord.lineId = map.get(chord.lineId); }); copied.pageBreakAfter = copied.pageBreakAfter.map(id2 => map.get(id2)).filter(Boolean); store.songs.push(normalizeSong(copied)); persist(); renderHome(); }
   function deleteSong(id) { const target = store.songs.find(item => item.id === id); if (!target || !window.confirm(`「${target.title || '無題'}」を削除しますか？`)) return; store.songs = store.songs.filter(item => item.id !== id); if (store.currentSongId === id) store.currentSongId = null; if (song?.id === id) { song = null; els.editor.classList.add('hidden'); els.home.classList.remove('hidden'); } persist(); renderHome(); }
-  function preparePrintLayout() { els.previewSheet.querySelectorAll('.preview-line').forEach(row => { row.style.transform = ''; row.style.transformOrigin = 'left top'; row.style.height = ''; const width = els.previewSheet.clientWidth; const content = row.scrollWidth; if (width && content > width) { const scale = width / content; row.style.transform = `scale(${scale})`; row.style.height = `${row.offsetHeight * scale}px`; } }); }
+  function preparePrintLayout() { els.previewSheet.querySelectorAll('.preview-line').forEach(row => { row.style.transform = ''; row.style.transformOrigin = 'left top'; row.style.height = ''; 
+
+const column = row.closest('.preview-column');
+const width = column
+  ? column.clientWidth
+  : els.previewSheet.clientWidth;
+
+ const content = row.scrollWidth; if (width && content > width) { const scale = width / content; row.style.transform = `scale(${scale})`; row.style.height = `${row.offsetHeight * scale}px`; } }); }
   function clearPrintLayout() { els.previewSheet.querySelectorAll('.preview-line').forEach(row => { row.style.transform = ''; row.style.transformOrigin = ''; row.style.height = ''; }); }
 
   if (els.addPageBreak) {
