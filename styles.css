@@ -1074,20 +1074,27 @@ button:disabled {
   /* 2段組みの設定（Safari対応） */
   body.print-two-column #previewSheet .preview-score {
     display: block !important;
+    position: relative !important;
 
     column-count: 2 !important;
     -webkit-column-count: 2 !important;
 
-    column-gap: 10mm;
-    -webkit-column-gap: 10mm;
+    column-gap: 10mm !important;
+    -webkit-column-gap: 10mm !important;
 
-    column-fill: auto;
-    -webkit-column-fill: auto;
+    /* Safariの印刷時は段をバランスよく配置 */
+    column-fill: balance !important;
+    -webkit-column-fill: balance !important;
+
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  /* 各歌詞行の表示 */
+  /* 各歌詞行 */
   body.print-two-column #previewSheet .preview-line {
     display: block !important;
+    position: relative !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
@@ -1111,15 +1118,14 @@ button:disabled {
     page-break-after: always !important;
   }
 
-  /* プレビュー専用の操作領域は印刷しない */
-  #previewSheet .preview-break-zone {
-    display: none !important;
-  }
-
+  /* 操作領域を印刷しない */
+  #previewSheet .preview-break-zone,
+  .preview-controls,
   .print-layout-control {
     display: none !important;
   }
 }
+
 /* 2段印刷では、手動改ページを次の段へ適用する */
 @media print {
   body.print-two-column #previewSheet .preview-line.page-break-after {
