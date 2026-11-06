@@ -1068,60 +1068,45 @@ button:disabled {
   }
 }
 
-/* 印刷時の2段組みと手動改ページ */
+/* 印刷時の2段組み：JavaScriptで左右に分割 */
 @media print {
   body.print-two-column #previewSheet .preview-score {
-    display: block !important;
-    position: relative !important;
-
-    /* Safari向けの段組み設定 */
-    -webkit-column-count: 2 !important;
-    column-count: 2 !important;
-
-    -webkit-column-gap: 10mm !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
     column-gap: 10mm !important;
-
-    -webkit-column-fill: balance !important;
-    column-fill: balance !important;
+    align-items: start !important;
 
     width: 100% !important;
     height: auto !important;
     overflow: visible !important;
   }
 
-  body.print-two-column #previewSheet .preview-line {
-    /* Safariで段組み内に配置されやすくする */
-    display: inline-block !important;
-    vertical-align: top;
+  body.print-two-column #previewSheet .preview-column {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
 
+  body.print-two-column #previewSheet .preview-line {
+    display: block !important;
     position: relative !important;
+
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box;
 
     break-inside: avoid !important;
-    -webkit-column-break-inside: avoid !important;
     page-break-inside: avoid !important;
-
     overflow: visible !important;
   }
 
-  /* 手動改ページ：次の段へ移動 */
-  body.print-two-column #previewSheet .preview-line.page-break-after {
-    break-after: column !important;
-    -webkit-column-break-after: always !important;
-    page-break-after: auto !important;
+  #previewSheet .preview-break-zone {
+    display: none !important;
   }
 
-  /* 1段印刷：次のページへ移動 */
-  body:not(.print-two-column) #previewSheet .preview-line.page-break-after {
-    break-after: page !important;
-    page-break-after: always !important;
-  }
-
-  /* 操作用の要素は印刷しない */
-  #previewSheet .preview-break-zone,
   .preview-controls,
   .print-layout-control {
     display: none !important;
