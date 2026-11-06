@@ -1070,30 +1070,49 @@ button:disabled {
 
 /* 印刷時の2段組みと手動改ページ */
 @media print {
+
+  /* 2段組みの設定（Safari対応） */
   body.print-two-column #previewSheet .preview-score {
-    column-count: 2;
+    display: block !important;
+
+    column-count: 2 !important;
+    -webkit-column-count: 2 !important;
+
     column-gap: 10mm;
+    -webkit-column-gap: 10mm;
+
     column-fill: auto;
+    -webkit-column-fill: auto;
   }
 
+  /* 各歌詞行の表示 */
   body.print-two-column #previewSheet .preview-line {
+    display: block !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box;
+
     break-inside: avoid;
+    -webkit-column-break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  /* 手動改ページを「次の段へ移動」に変更 */
+  /* 2段印刷：手動改ページは次の段へ */
   body.print-two-column #previewSheet .preview-line.page-break-after {
     break-after: column !important;
+    -webkit-column-break-after: always !important;
     page-break-after: auto !important;
-    -webkit-column-break-after: always;
   }
 
-  /* プレビュー専用の改ページ操作領域は印刷しない */
-  body.print-two-column #previewSheet .preview-break-zone {
+  /* 1段印刷：手動改ページは次のページへ */
+  body:not(.print-two-column) #previewSheet .preview-line.page-break-after {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  /* プレビュー専用の操作領域は印刷しない */
+  #previewSheet .preview-break-zone {
     display: none !important;
   }
 
@@ -1101,7 +1120,6 @@ button:disabled {
     display: none !important;
   }
 }
-
 /* 2段印刷では、手動改ページを次の段へ適用する */
 @media print {
   body.print-two-column #previewSheet .preview-line.page-break-after {
