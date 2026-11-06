@@ -365,6 +365,39 @@ function renderPreview() {
 
   els.previewSheet.append(artist, score);
 
+  // 2段印刷の場合
+  const twoColumn = document.body.classList.contains('print-two-column');
+
+  if (twoColumn) {
+    const leftColumn = document.createElement('div');
+    leftColumn.className = 'preview-column preview-column-left';
+
+    const rightColumn = document.createElement('div');
+    rightColumn.className = 'preview-column preview-column-right';
+
+    // 行数を半分に分ける
+    const splitIndex = Math.ceil(song.lines.length / 2);
+
+    song.lines.forEach((line, index) => {
+      const row = createRow(line, false);
+
+      if (song.pageBreakAfter.includes(line.id)) {
+        row.classList.add('page-break-after');
+      }
+
+      const targetColumn = index < splitIndex
+        ? leftColumn
+        : rightColumn;
+
+      targetColumn.appendChild(row);
+      renderChordsOnRow(row, line.id, false);
+    });
+
+    score.append(leftColumn, rightColumn);
+    return;
+  }
+
+  // 1段印刷・通常プレビューの場合
   song.lines.forEach((line, index) => {
     const row = createRow(line, false);
 
@@ -380,7 +413,6 @@ function renderPreview() {
     }
   });
 }
-
   function renderFonts() { const root = document.documentElement; root.style.setProperty('--lyric-font-size', `${song.lyricFontSize}px`); root.style.setProperty('--chord-font-size', `${song.chordFontSize}px`); root.style.setProperty('--lyric-font-family', song.lyricFontFamily); root.style.setProperty('--chord-font-family', song.chordFontFamily); els.lyricSize.value = song.lyricFontSize; els.chordSize.value = song.chordFontSize; els.lyricSizeValue.textContent = song.lyricFontSize; els.chordSizeValue.textContent = song.chordFontSize; els.lyricFamily.value = song.lyricFontFamily; els.chordFamily.value = song.chordFontFamily; }
   function renderTransposeValue() { const value = Number(song?.transpose) || 0; els.transposeValue.textContent = value > 0 ? `+${value}` : String(value); }
   function renderAll() { if (!song) return; normalizeSong(song); els.title.value = song.title; els.artist.value = song.artist; els.key.value = song.key; els.capo.value = song.capo; if (els.lyrics.value !== song.lyrics) els.lyrics.value = song.lyrics; renderFonts(); renderEditor(); renderPreview(); renderPalette(); renderTransposeValue(); updateMode(); updateMobileControls();  }
@@ -503,19 +535,21 @@ els.print.onclick = () => {
   // 印刷前の画面を記録
   const previousMode = mode;
 
-  // どの編集画面からでもプレビューを表示して印刷する
-  mode = 'preview';
-  updateMode();
-  renderPreview();
-
-  // 選択されている印刷レイアウトを反映
+  // 印刷レイアウトを先に設定
   const layout = document.querySelector('#printLayoutInput')?.value;
+
   document.body.classList.toggle(
     'print-two-column',
     layout === 'double'
   );
 
-  // プレビューの描画後にコードの幅を調整して印刷
+  // プレビュー画面に切り替える
+  mode = 'preview';
+  updateMode();
+
+  // 設定されたレイアウトに合わせてプレビューを生成
+  renderPreview();
+
   window.addEventListener('afterprint', () => {
     clearPrintLayout();
     document.body.classList.remove('print-two-column');
@@ -523,6 +557,7 @@ els.print.onclick = () => {
     // 印刷前の画面に戻す
     mode = previousMode;
     updateMode();
+    renderPreview();
   }, { once: true });
 
   requestAnimationFrame(() => {
