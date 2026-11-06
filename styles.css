@@ -1068,19 +1068,43 @@ button:disabled {
   }
 }
 
-/* 印刷時の2段組み：JavaScriptで左右に分割 */
-@media print {
-  body.print-two-column #previewSheet .preview-score {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-    column-gap: 10mm !important;
-    align-items: start !important;
 
+@media print {
+  /* 2段印刷時の全体 */
+  body.print-two-column #previewSheet .preview-score {
+    display: block !important;
     width: 100% !important;
     height: auto !important;
     overflow: visible !important;
   }
 
+  /* 1ページ分の領域 */
+  body.print-two-column #previewSheet .preview-page {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+
+    break-after: page;
+    page-break-after: always;
+  }
+
+  /* 最後のページの後には余分な改ページを入れない */
+  body.print-two-column #previewSheet .preview-page:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
+  }
+
+  /* 1ページ内の左右2段 */
+  body.print-two-column #previewSheet .preview-page-columns {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    column-gap: 10mm !important;
+    align-items: start !important;
+    width: 100% !important;
+  }
+
+  /* 左右の段 */
   body.print-two-column #previewSheet .preview-column {
     display: block !important;
     width: 100% !important;
@@ -1089,20 +1113,20 @@ button:disabled {
     overflow: visible !important;
   }
 
+  /* 各行 */
   body.print-two-column #previewSheet .preview-line {
     display: block !important;
     position: relative !important;
-
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    box-sizing: border-box;
-
+    box-sizing: border-box !important;
+    overflow: visible !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
-    overflow: visible !important;
   }
 
+  /* プレビュー用の改ページ操作領域は印刷しない */
   #previewSheet .preview-break-zone {
     display: none !important;
   }
