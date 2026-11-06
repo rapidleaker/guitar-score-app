@@ -343,10 +343,10 @@ requestAnimationFrame(() => window.scrollTo(0, scrollY)); }
   function renderEditor() { els.score.replaceChildren(); song.lines.forEach(line => { const row = createRow(line, true); els.score.appendChild(row); renderChordsOnRow(row, line.id, true); }); }
 
 
+
 function renderPreview() {
   els.previewSheet.replaceChildren();
 
-  // 曲名が入力されている場合だけ、曲名欄を作成する
   if (song.title.trim()) {
     const title = document.createElement('h2');
     title.textContent = song.title;
@@ -363,35 +363,31 @@ function renderPreview() {
 
   const score = document.createElement('div');
   score.className = 'score preview-score';
-
   els.previewSheet.append(artist, score);
 
-  // 2段印刷の場合
   const twoColumn = document.body.classList.contains('print-two-column');
 
   if (twoColumn) {
-    // 手動改ページの位置でページごとに分割する
-    const pages = [];
-    let currentPageLines = [];
+    // 手動改ページの位置で、行のグループを分ける
+    const groups = [];
+    let currentGroup = [];
 
     song.lines.forEach(line => {
-      currentPageLines.push(line);
+      currentGroup.push(line);
 
-      // この行の後に改ページが指定されていたら、
-      // この行までを現在のページにする
       if (song.pageBreakAfter.includes(line.id)) {
-        pages.push(currentPageLines);
-        currentPageLines = [];
+        groups.push(currentGroup);
+        currentGroup = [];
       }
     });
 
-    // 最後に残った行があれば追加する
-    if (currentPageLines.length > 0) {
-      pages.push(currentPageLines);
+    if (currentGroup.length > 0) {
+      groups.push(currentGroup);
     }
 
-    // ページごとに左右2段を作成する
-    pages.forEach((pageLines, pageIndex) => {
+    // 各グループを一時的に左段へ配置する。
+    // 実際の左右・ページ分割は preparePrintLayout() で行う。
+    groups.forEach(lines => {
       const page = document.createElement('div');
       page.className = 'preview-page';
 
@@ -404,17 +400,9 @@ function renderPreview() {
       const rightColumn = document.createElement('div');
       rightColumn.className = 'preview-column preview-column-right';
 
-      // 左段を上から下まで配置し、その後に右段へ続ける
-      const splitIndex = Math.ceil(pageLines.length / 2);
-
-      pageLines.forEach((line, index) => {
+      lines.forEach(line => {
         const row = createRow(line, false);
-
-        const targetColumn = index < splitIndex
-          ? leftColumn
-          : rightColumn;
-
-        targetColumn.appendChild(row);
+        leftColumn.appendChild(row);
         renderChordsOnRow(row, line.id, false);
       });
 
@@ -513,28 +501,188 @@ return; } if (suppressChordActivation) { suppressChordActivation = false; return
   function showHome() { closeInlineInput(); if (dragState) endDrag(); closeMobilePalette(); persist(); els.editor.classList.add('hidden'); els.home.classList.remove('hidden'); renderHome(); }
   function duplicateSong(id) { const source = store.songs.find(item => item.id === id); if (!source) return; const copied = clone(source); const map = new Map(); copied.id = uid('song'); copied.title = `${source.title || '無題'} のコピー`; copied.updatedAt = Date.now(); copied.lines.forEach(line => { const old = line.id; line.id = uid('line'); map.set(old, line.id); }); copied.chords.forEach(chord => { chord.id = uid('chord'); chord.lineId = map.get(chord.lineId); }); copied.pageBreakAfter = copied.pageBreakAfter.map(id2 => map.get(id2)).filter(Boolean); store.songs.push(normalizeSong(copied)); persist(); renderHome(); }
   function deleteSong(id) { const target = store.songs.find(item => item.id === id); if (!target || !window.confirm(`「${target.title || '無題'}」を削除しますか？`)) return; store.songs = store.songs.filter(item => item.id !== id); if (store.currentSongId === id) store.currentSongId = null; if (song?.id === id) { song = null; els.editor.classList.add('hidden'); els.home.classList.remove('hidden'); } persist(); renderHome(); }
-  function preparePrintLayout() { els.previewSheet.querySelectorAll('.preview-line').forEach(row => { row.style.transform = ''; row.style.transformOrigin = 'left top'; row.style.height = ''; 
 
-const column = row.closest('.preview-column');
-const width = column
-  ? column.clientWidth
-  : els.previewSheet.clientWidth;
+function preparePrintLayout() {
+  const score = els.previewSheet.querySelector('.preview-score');
+  if (!score) return;
 
- const content = row.scrollWidth; if (width && content > width) { const scale = width / content; row.style.transform = `scale(${scale})`; row.style.height = `${row.offsetHeight * scale}px`; } }); }
-  function clearPrintLayout() { els.previewSheet.querySelectorAll('.preview-line').forEach(row => { row.style.transform = ''; row.style.transformOrigin = ''; row.style.height = ''; }); }
+  // 手動改ページごとの行を取得
+  const groups = [...score.querySelectorAll('.preview-page')].map(page => {
+    return [...page.querySelectorAll('.preview-line')];
+  });
 
-  if (els.addPageBreak) {
-    els.addPageBreak.onclick = event => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (mode !== 'preview') {
-        mode = 'preview';
-        updateMode();
-        renderPreview();
-      }
-      setPreviewBreakAddMode(!previewBreakAddMode);
+  // A4縦297mm - 上下余白各8mm
+  const pageHeightProbe = document.createElement('div');
+  pageHeightProbe.style.cssText = `
+    position: absolute;
+    visibility: hidden;
+    height: 281mm;
+    width: 1mm;
+    left: -10000px;
+    top: 0;
+  `;
+  document.body.appendChild(pageHeightProbe);
+
+  const pageHeight = pageHeightProbe.getBoundingClientRect().height;
+  pageHeightProbe.remove();
+
+  // 曲名・アーティスト欄が占める高さ
+  const headerHeight = Math.max(
+    0,
+    score.getBoundingClientRect().top -
+    els.previewSheet.getBoundingClientRect().top
+  );
+
+  // 印刷可能幅：194mm
+  const pageWidthProbe = document.createElement('div');
+  pageWidthProbe.style.cssText = `
+    position: absolute;
+    visibility: hidden;
+    width: 194mm;
+    height: 1mm;
+    left: -10000px;
+    top: 0;
+  `;
+  document.body.appendChild(pageWidthProbe);
+
+  const printableWidth = pageWidthProbe.getBoundingClientRect().width;
+  pageWidthProbe.remove();
+
+  const columnGap = 10 * 96 / 25.4;
+  const columnWidth = (printableWidth - columnGap) / 2;
+
+  // 既存の仮配置をクリア
+  score.replaceChildren();
+
+  let currentPage = null;
+  let firstPage = true;
+
+  // 新しい印刷ページを作る
+  function createPage() {
+    const page = document.createElement('div');
+    page.className = 'preview-page';
+
+    const columns = document.createElement('div');
+    columns.className = 'preview-page-columns';
+
+    const left = document.createElement('div');
+    left.className = 'preview-column preview-column-left';
+
+    const right = document.createElement('div');
+    right.className = 'preview-column preview-column-right';
+
+    columns.append(left, right);
+    page.appendChild(columns);
+    score.appendChild(page);
+
+    const availableHeight = Math.max(
+      0,
+      pageHeight - (firstPage ? headerHeight : 0)
+    );
+
+    firstPage = false;
+
+    return {
+      left,
+      right,
+      availableHeight,
+      leftHeight: 0,
+      rightHeight: 0,
+      currentColumn: 'left'
     };
   }
+
+  // 行を段に追加して、実際の高さを測る
+  function addRow(column, row) {
+    column.appendChild(row);
+
+    row.style.transform = '';
+    row.style.transformOrigin = 'left top';
+    row.style.height = '';
+    row.style.width = `${columnWidth}px`;
+    row.style.minWidth = '0';
+    row.style.maxWidth = `${columnWidth}px`;
+    row.style.boxSizing = 'border-box';
+    row.style.minHeight = '4.2em';
+    row.style.paddingTop = '2.2em';
+
+    return row.getBoundingClientRect().height;
+  }
+
+  // 各手動改ページグループを配置
+  groups.forEach(group => {
+    // 手動改ページがあれば必ず新しいページから開始
+    currentPage = createPage();
+
+    group.forEach(row => {
+      let columnName = currentPage.currentColumn;
+
+      // 現在の段に仮配置
+      let column = columnName === 'left'
+        ? currentPage.left
+        : currentPage.right;
+
+      let height = addRow(column, row);
+
+      let usedHeight = columnName === 'left'
+        ? currentPage.leftHeight
+        : currentPage.rightHeight;
+
+      // 現在の段に収まるか確認
+      if (
+        usedHeight + height > currentPage.availableHeight &&
+        usedHeight > 0
+      ) {
+        // 左段に入らなければ右段へ
+        if (columnName === 'left') {
+          currentPage.left.removeChild(row);
+          currentPage.currentColumn = 'right';
+
+          column = currentPage.right;
+          columnName = 'right';
+          height = addRow(column, row);
+          usedHeight = currentPage.rightHeight;
+        }
+
+        // 右段にも入らなければ次ページへ
+        if (
+          usedHeight + height > currentPage.availableHeight &&
+          usedHeight > 0
+        ) {
+          currentPage.right.removeChild(row);
+
+          currentPage = createPage();
+          currentPage.currentColumn = 'left';
+
+          height = addRow(currentPage.left, row);
+          currentPage.leftHeight += height;
+          return;
+        }
+      }
+
+      // 配置した段の使用済み高さを更新
+      if (columnName === 'left') {
+        currentPage.leftHeight += height;
+      } else {
+        currentPage.rightHeight += height;
+      }
+    });
+  });
+
+  // 段の横幅を超える行を縮小
+  score.querySelectorAll('.preview-line').forEach(row => {
+    const content = row.scrollWidth;
+
+    if (columnWidth && content > columnWidth) {
+      const originalHeight = row.getBoundingClientRect().height;
+      const scale = columnWidth / content;
+
+      row.style.transform = `scale(${scale})`;
+      row.style.transformOrigin = 'left top';
+      row.style.height = `${originalHeight * scale}px`;
+    }
+  });
+}
 
   els.newSong.onclick = () => { const fresh = createSong(); store.songs.push(fresh); persist(); openEditor(fresh.id); };
   els.homeBtn.onclick = showHome;
