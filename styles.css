@@ -1070,74 +1070,60 @@ button:disabled {
 
 /* 印刷時の2段組みと手動改ページ */
 @media print {
-
-  /* 2段組みの設定（Safari対応） */
   body.print-two-column #previewSheet .preview-score {
     display: block !important;
     position: relative !important;
 
-    column-count: 2 !important;
+    /* Safari向けの段組み設定 */
     -webkit-column-count: 2 !important;
+    column-count: 2 !important;
 
-    column-gap: 10mm !important;
     -webkit-column-gap: 10mm !important;
+    column-gap: 10mm !important;
 
-    /* Safariの印刷時は段をバランスよく配置 */
-    column-fill: balance !important;
     -webkit-column-fill: balance !important;
+    column-fill: balance !important;
 
     width: 100% !important;
     height: auto !important;
     overflow: visible !important;
   }
 
-  /* 各歌詞行 */
   body.print-two-column #previewSheet .preview-line {
-    display: block !important;
+    /* Safariで段組み内に配置されやすくする */
+    display: inline-block !important;
+    vertical-align: top;
+
     position: relative !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box;
 
-    break-inside: avoid;
-    -webkit-column-break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: avoid !important;
+    -webkit-column-break-inside: avoid !important;
+    page-break-inside: avoid !important;
+
+    overflow: visible !important;
   }
 
-  /* 2段印刷：手動改ページは次の段へ */
+  /* 手動改ページ：次の段へ移動 */
   body.print-two-column #previewSheet .preview-line.page-break-after {
     break-after: column !important;
     -webkit-column-break-after: always !important;
     page-break-after: auto !important;
   }
 
-  /* 1段印刷：手動改ページは次のページへ */
+  /* 1段印刷：次のページへ移動 */
   body:not(.print-two-column) #previewSheet .preview-line.page-break-after {
     break-after: page !important;
     page-break-after: always !important;
   }
 
-  /* 操作領域を印刷しない */
+  /* 操作用の要素は印刷しない */
   #previewSheet .preview-break-zone,
   .preview-controls,
   .print-layout-control {
     display: none !important;
   }
 }
-
-/* 2段印刷では、手動改ページを次の段へ適用する */
-@media print {
-  body.print-two-column #previewSheet .preview-line.page-break-after {
-    break-after: column !important;
-    page-break-after: auto !important;
-    -webkit-column-break-after: always !important;
-  }
-
-  /* 1段印刷では従来どおりページを改める */
-  body:not(.print-two-column) #previewSheet .preview-line.page-break-after {
-    break-after: page !important;
-    page-break-after: always !important;
-  }
-}
-
