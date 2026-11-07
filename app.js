@@ -526,12 +526,19 @@ function preparePrintLayout() {
   const pageHeight = pageHeightProbe.getBoundingClientRect().height;
   pageHeightProbe.remove();
 
-  // 曲名・アーティスト欄が占める高さ
-  const headerHeight = Math.max(
-    0,
-    score.getBoundingClientRect().top -
-    els.previewSheet.getBoundingClientRect().top
-  );
+// 曲名・アーティスト欄が占める高さ
+// previewSheet自体の余白は含めず、実際のヘッダー部分だけを計算する
+const headerStart =
+  els.previewSheet.querySelector('h2') ||
+  els.previewSheet.querySelector('.artist');
+
+const headerHeight = headerStart
+  ? Math.max(
+      0,
+      score.getBoundingClientRect().top -
+      headerStart.getBoundingClientRect().top
+    )
+  : 0;
 
   // 印刷可能幅：194mm
   const pageWidthProbe = document.createElement('div');
