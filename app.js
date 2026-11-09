@@ -598,6 +598,16 @@ const headerHeight = headerStart
       currentColumn: 'left'
     };
   }
+    // 手動改ページ時に次の段へ移動
+  function moveToNextColumn() {
+    if (currentPage.currentColumn === 'left') {
+      // 左段から右段へ
+      currentPage.currentColumn = 'right';
+    } else {
+      // 右段から次のページへ
+      currentPage = createPage();
+    }
+  }
 
   // 行を段に追加して、実際の高さを測る
   function addRow(column, row) {
@@ -617,9 +627,22 @@ const headerHeight = headerStart
   }
 
   // 各手動改ページグループを配置
-  groups.forEach(group => {
-    // 手動改ページがあれば必ず新しいページから開始
-    currentPage = createPage();
+  groups.forEach((group, groupIndex) => {
+
+    // 最初のグループでは最初のページを作成
+    if (groupIndex === 0) {
+      currentPage = createPage();
+
+    } else {
+      // 左段にいる場合は右段へ
+      if (currentPage.currentColumn === 'left') {
+        currentPage.currentColumn = 'right';
+
+      } else {
+        // 右段にいる場合は次のページへ
+        currentPage = createPage();
+      }
+    }
 
     group.forEach(row => {
       let columnName = currentPage.currentColumn;
@@ -673,6 +696,21 @@ const headerHeight = headerStart
       } else {
         currentPage.rightHeight += height;
       }
+    });
+  });
+
+  // 段への再配置後にコードの横位置を再計算
+  score.querySelectorAll('.preview-line').forEach(row => {
+    row.querySelectorAll('.chord').forEach(button => {
+      const chord = song.chords.find(
+        item => String(item.id) === button.dataset.chordId
+      );
+
+      if (!chord) return;
+
+      const x = getCharX(row, chord.charIndex);
+
+      button.style.left = `${x + chord.offset}px`;
     });
   });
 
