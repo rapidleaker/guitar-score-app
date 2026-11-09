@@ -750,6 +750,7 @@ window.addEventListener('afterprint', () => {
   updateMode();
   renderPreview();
 }, { once: true });
+
   requestAnimationFrame(() => {
   // 2段印刷の場合だけ、左右の段に譜面を再配置する
   if (layout === 'double') {
@@ -758,6 +759,8 @@ window.addEventListener('afterprint', () => {
 
   window.print();
 });
+
+};
 
 window.addEventListener('pointermove', moveDrag, { passive: false });
 window.addEventListener('pointermove', movePreviewBreakDrag, { passive: false });
