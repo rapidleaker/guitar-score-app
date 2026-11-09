@@ -742,23 +742,24 @@ els.print.onclick = () => {
   // 設定されたレイアウトに合わせてプレビューを生成
   renderPreview();
 
-  window.addEventListener('afterprint', () => {
-    clearPrintLayout();
-    document.body.classList.remove('print-two-column');
+window.addEventListener('afterprint', () => {
+  document.body.classList.remove('print-two-column');
 
-    // 印刷前の画面に戻す
-    mode = previousMode;
-    updateMode();
-    renderPreview();
-  }, { once: true });
-
+  // 印刷前の画面に戻す
+  mode = previousMode;
+  updateMode();
+  renderPreview();
+}, { once: true });
   requestAnimationFrame(() => {
+  // 2段印刷の場合だけ、左右の段に譜面を再配置する
+  if (layout === 'double') {
     preparePrintLayout();
-    window.print();
-  });
-};
+  }
 
-window.addEventListener('afterprint', clearPrintLayout); window.addEventListener('pointermove', moveDrag, { passive: false });
+  window.print();
+});
+
+window.addEventListener('pointermove', moveDrag, { passive: false });
 window.addEventListener('pointermove', movePreviewBreakDrag, { passive: false });
 window.addEventListener('pointerup', event => {
     endDrag(event);
